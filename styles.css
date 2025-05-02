@@ -24,77 +24,45 @@ body {
 }
 
 .container {
-    max-width: 600px;
+    max-width: 800px;
     margin: 0 auto;
     padding: 20px;
 }
 
-header {
-    margin-bottom: 24px;
-    text-align: center;
-}
-
-header h1 {
-    margin-bottom: 8px;
-    color: var(--secondary-color);
-    font-size: 28px;
-}
-
-.current-time {
-    font-size: 18px;
-    font-weight: 500;
-    color: var(--primary-color);
-}
-
-.tabs {
-    display: flex;
-    margin-bottom: 20px;
-    background-color: var(--card-bg-color);
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    box-shadow: var(--shadow);
-}
-
-.tab-btn {
-    flex: 1;
-    padding: 14px;
-    background: none;
-    border: none;
-    font-size: 16px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: var(--light-text-color);
-}
-
-.tab-btn.active {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-.schedule-info {
+/* 新しいヘッダースタイル */
+.status-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
     padding: 15px;
     background-color: var(--card-bg-color);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
 }
 
-.date-info {
-    font-size: 16px;
+.date-time-info, .schedule-status {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.current-time {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary-color);
 }
 
 #currentDate {
+    font-size: 16px;
     font-weight: 500;
-    margin-bottom: 4px;
 }
 
 #scheduleType {
     color: var(--primary-color);
     font-weight: 700;
+    font-size: 16px;
+    text-align: right;
 }
 
 .operation-status {
@@ -104,6 +72,7 @@ header h1 {
     color: white;
     border-radius: 20px;
     font-weight: 500;
+    text-align: center;
 }
 
 .operation-status.warning {
@@ -114,44 +83,67 @@ header h1 {
     background-color: var(--accent-color);
 }
 
+/* 方向コンテナスタイル */
+.bus-directions {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.direction-container {
+    background-color: var(--card-bg-color);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+}
+
+.direction-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: var(--secondary-color);
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 8px;
+}
+
 .bus-cards {
     display: flex;
     gap: 16px;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 .bus-card {
     flex: 1;
-    padding: 20px;
-    background-color: var(--card-bg-color);
+    padding: 15px;
+    background-color: var(--background-color);
     border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     text-align: center;
     transition: transform 0.3s ease;
 }
 
 .bus-card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-3px);
 }
 
 .bus-card.next {
-    border-top: 5px solid var(--primary-color);
+    border-left: 5px solid var(--primary-color);
 }
 
 .bus-card.after-next {
-    border-top: 5px solid var(--secondary-color);
+    border-left: 5px solid var(--secondary-color);
 }
 
 .card-header {
-    font-size: 16px;
-    margin-bottom: 10px;
+    font-size: 14px;
+    margin-bottom: 8px;
     color: var(--light-text-color);
 }
 
 .bus-card .time {
-    font-size: 32px;
+    font-size: 28px;
     font-weight: 700;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
 }
 
 .bus-card .remaining {
@@ -160,14 +152,14 @@ header h1 {
 }
 
 .upcoming-buses {
-    background-color: var(--card-bg-color);
+    background-color: var(--background-color);
     border-radius: var(--border-radius);
     padding: 15px;
-    box-shadow: var(--shadow);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .upcoming-buses h3 {
-    font-size: 18px;
+    font-size: 16px;
     margin-bottom: 10px;
     color: var(--secondary-color);
 }
@@ -179,7 +171,7 @@ header h1 {
 .bus-list-item {
     display: flex;
     justify-content: space-between;
-    padding: 10px 0;
+    padding: 8px 0;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
@@ -195,26 +187,32 @@ header h1 {
     color: var(--light-text-color);
 }
 
-@media (max-width: 480px) {
+.no-service {
+    text-align: center;
+    padding: 15px;
+    color: var(--accent-color);
+}
+
+@media (max-width: 600px) {
     .container {
         padding: 15px;
     }
     
-    header h1 {
-        font-size: 24px;
+    .status-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .schedule-status {
+        align-items: flex-start;
+    }
+    
+    #scheduleType {
+        text-align: left;
     }
     
     .bus-card .time {
-        font-size: 28px;
-    }
-    
-    .schedule-info {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-    
-    .operation-status {
-        align-self: flex-start;
+        font-size: 24px;
     }
 }

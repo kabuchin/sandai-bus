@@ -1,6 +1,7 @@
 let timeTableData;
 let dayScheduleData;
-let currentDirection = "産業大学前発";
+const universityDirection = "産業大学前発";
+const stationDirection = "JR住道駅発";
 let upcomingBusCount = 5;
 
 // 初期化関数
@@ -14,9 +15,6 @@ async function init() {
         
         timeTableData = await timeResponse.json();
         dayScheduleData = await dayResponse.json();
-        
-        // タブ切り替えの設定
-        setupTabs();
         
         // 初回表示
         updateDisplay();
@@ -33,20 +31,6 @@ async function init() {
             </div>
         `;
     }
-}
-
-// タブ切り替え設定
-function setupTabs() {
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    
-    tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-            currentDirection = this.dataset.direction;
-            updateDisplay();
-        });
-    });
 }
 
 // 現在の日付に基づいて適用すべき時刻表を取得
@@ -198,7 +182,49 @@ function formatDate(date) {
     return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日(${dayNames[date.getDay()]})`;
 }
 
-// 表示を更新
+// 特定の方向のバス情報を更新
+function updateDirectionDisplay(direction, directionSuffix, hour, minute, applicableSchedule) {
+    // 次と次々のバスを取得
+    const { next, afterNext, upcomingBuses } = getNextBuses(direction, hour, minute);
+    
+    // 次のバス表示
+    if (next) {
+        document.getElementById(`nextBusTime-${directionSuffix}`).textContent = formatTime(next.hour, next.minute);
+        document.getElementById(`nextBusRemaining-${directionSuffix}`).textContent = calculateRemainingTime(next.hour, next.minute, next.isNextDay);
+    } else {
+        document.getElementById(`nextBusTime-${directionSuffix}`).textContent = '-- : --';
+        document.getElementById(`nextBusRemaining-${directionSuffix}`).textContent = '本日の運行は終了しました';
+    }
+    
+    // 次々のバス表示
+    if (afterNext) {
+        document.getElementById(`afterNextBusTime-${directionSuffix}`).textContent = formatTime(afterNext.hour, afterNext.minute);
+        document.getElementById(`afterNextBusRemaining-${directionSuffix}`).textContent = calculateRemainingTime(afterNext.hour, afterNext.minute, afterNext.isNextDay);
+    } else {
+        document.getElementById(`afterNextBusTime-${directionSuffix}`).textContent = '-- : --';
+        document.getElementById(`afterNextBusRemaining-${directionSuffix}`).textContent = '本日の運行は終了しました';
+    }
+    
+    // 今後のバス時刻リスト表示
+    const upcomingBusListEl = document.getElementById(`upcomingBusList-${directionSuffix}`);
+    if (upcomingBuses.length > 0) {
+        let html = '<h3>今後の発車時刻</h3><ul class="bus-list">';
+        upcomingBuses.forEach(bus => {
+            html += `
+                <li class="bus-list-item">
+                    <span class="bus-time">${formatTime(bus.hour, bus.minute)}</span>
+                    <span class="bus-remaining">${calculateRemainingTime(bus.hour, bus.minute, bus.isNextDay)}</span>
+                </li>
+            `;
+        });
+        html += '</ul>';
+        upcomingBusListEl.innerHTML = html;
+    } else {
+        upcomingBusListEl.innerHTML = '';
+    }
+}
+
+// 全体の表示を更新
 function updateDisplay() {
     const now = new Date();
     const hour = now.getHours();
@@ -220,56 +246,26 @@ function updateDisplay() {
         operationStatusEl.textContent = '本日運休';
         operationStatusEl.classList.add('danger');
         
-        // 運休時は時刻表示をクリア
-        document.getElementById('nextBusTime').textContent = '-- : --';
-        document.getElementById('nextBusRemaining').textContent = '運休';
-        document.getElementById('afterNextBusTime').textContent = '-- : --';
-        document.getElementById('afterNextBusRemaining').textContent = '運休';
-        document.getElementById('upcomingBusList').innerHTML = '<div class="no-service">本日のバスの運行はありません</div>';
+        // 運休時は両方向の時刻表示をクリア
+        document.getElementById('upcomingBusList-university').innerHTML = '<div class="no-service">本日のバスの運行はありません</div>';
+        document.getElementById('upcomingBusList-station').innerHTML = '<div class="no-service">本日のバスの運行はありません</div>';
+        
+        ['university', 'station'].forEach(directionSuffix => {
+            document.getElementById(`nextBusTime-${directionSuffix}`).textContent = '-- : --';
+            document.getElementById(`nextBusRemaining-${directionSuffix}`).textContent = '運休';
+            document.getElementById(`afterNextBusTime-${directionSuffix}`).textContent = '-- : --';
+            document.getElementById(`afterNextBusRemaining-${directionSuffix}`).textContent = '運休';
+        });
+        
         return;
     } else {
         operationStatusEl.textContent = '運行中';
         operationStatusEl.classList.remove('danger');
     }
     
-    // 次と次々のバスを取得
-    const { next, afterNext, upcomingBuses } = getNextBuses(currentDirection, hour, minute);
-    
-    // 次のバス表示
-    if (next) {
-        document.getElementById('nextBusTime').textContent = formatTime(next.hour, next.minute);
-        document.getElementById('nextBusRemaining').textContent = calculateRemainingTime(next.hour, next.minute, next.isNextDay);
-    } else {
-        document.getElementById('nextBusTime').textContent = '-- : --';
-        document.getElementById('nextBusRemaining').textContent = '本日の運行は終了しました';
-    }
-    
-    // 次々のバス表示
-    if (afterNext) {
-        document.getElementById('afterNextBusTime').textContent = formatTime(afterNext.hour, afterNext.minute);
-        document.getElementById('afterNextBusRemaining').textContent = calculateRemainingTime(afterNext.hour, afterNext.minute, afterNext.isNextDay);
-    } else {
-        document.getElementById('afterNextBusTime').textContent = '-- : --';
-        document.getElementById('afterNextBusRemaining').textContent = '本日の運行は終了しました';
-    }
-    
-    // 今後のバス時刻リスト表示
-    const upcomingBusListEl = document.getElementById('upcomingBusList');
-    if (upcomingBuses.length > 0) {
-        let html = '<h3>今後の発車時刻</h3><ul class="bus-list">';
-        upcomingBuses.forEach(bus => {
-            html += `
-                <li class="bus-list-item">
-                    <span class="bus-time">${formatTime(bus.hour, bus.minute)}</span>
-                    <span class="bus-remaining">${calculateRemainingTime(bus.hour, bus.minute, bus.isNextDay)}</span>
-                </li>
-            `;
-        });
-        html += '</ul>';
-        upcomingBusListEl.innerHTML = html;
-    } else {
-        upcomingBusListEl.innerHTML = '';
-    }
+    // 両方向のバス情報を更新
+    updateDirectionDisplay(universityDirection, 'university', hour, minute, applicableSchedule);
+    updateDirectionDisplay(stationDirection, 'station', hour, minute, applicableSchedule);
 }
 
 // ページ読み込み時に初期化

@@ -3,45 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>バス時刻案内</title>
+    <title>バス時刻情報</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>バス時刻案内</h1>
-            <div class="current-time" id="currentTime"></div>
+        <header class="status-header">
+            <div class="date-time-info">
+                <div class="current-time" id="currentTime"></div>
+                <div id="currentDate"></div>
+            </div>
+            <div class="schedule-status">
+                <div id="scheduleType"></div>
+                <div class="operation-status" id="operationStatus"></div>
+            </div>
         </header>
         
-        <div class="tabs">
-            <button class="tab-btn active" data-direction="産業大学前発">産業大学前発</button>
-            <button class="tab-btn" data-direction="JR住道駅発">JR住道駅発</button>
-        </div>
-        
-        <div class="schedule-info">
-            <div class="date-info">
-                <div id="currentDate"></div>
-                <div id="scheduleType"></div>
+        <div class="bus-directions">
+            <div class="direction-container">
+                <h2 class="direction-title">産業大学前発</h2>
+                <div class="bus-cards">
+                    <div class="bus-card next">
+                        <div class="card-header">次のバス</div>
+                        <div class="time" id="nextBusTime-university">--:--</div>
+                        <div class="remaining" id="nextBusRemaining-university"></div>
+                    </div>
+                    <div class="bus-card after-next">
+                        <div class="card-header">その次のバス</div>
+                        <div class="time" id="afterNextBusTime-university">--:--</div>
+                        <div class="remaining" id="afterNextBusRemaining-university"></div>
+                    </div>
+                </div>
+                <div class="upcoming-buses" id="upcomingBusList-university">
+                    <!-- 産業大学前発の今後のバス時刻が表示されます -->
+                </div>
             </div>
-            <div class="operation-status" id="operationStatus"></div>
-        </div>
-        
-        <div class="bus-cards">
-            <div class="bus-card next">
-                <div class="card-header">次のバス</div>
-                <div class="time" id="nextBusTime">--:--</div>
-                <div class="remaining" id="nextBusRemaining"></div>
+            
+            <div class="direction-container">
+                <h2 class="direction-title">JR住道駅発</h2>
+                <div class="bus-cards">
+                    <div class="bus-card next">
+                        <div class="card-header">次のバス</div>
+                        <div class="time" id="nextBusTime-station">--:--</div>
+                        <div class="remaining" id="nextBusRemaining-station"></div>
+                    </div>
+                    <div class="bus-card after-next">
+                        <div class="card-header">その次のバス</div>
+                        <div class="time" id="afterNextBusTime-station">--:--</div>
+                        <div class="remaining" id="afterNextBusRemaining-station"></div>
+                    </div>
+                </div>
+                <div class="upcoming-buses" id="upcomingBusList-station">
+                    <!-- JR住道駅発の今後のバス時刻が表示されます -->
+                </div>
             </div>
-            <div class="bus-card after-next">
-                <div class="card-header">その次のバス</div>
-                <div class="time" id="afterNextBusTime">--:--</div>
-                <div class="remaining" id="afterNextBusRemaining"></div>
-            </div>
-        </div>
-        
-        <div class="upcoming-buses" id="upcomingBusList">
-            <!-- ここに今後のバス時刻リストが表示されます -->
         </div>
     </div>
     
