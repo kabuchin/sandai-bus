@@ -6,6 +6,36 @@
     <title>バス時刻情報</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .error-message {
+            text-align: center;
+            padding: 30px;
+            margin: 20px auto;
+            max-width: 600px;
+            background-color: #ffeeee;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            color: #e74c3c;
+        }
+        .error-message h2 {
+            margin-bottom: 15px;
+            color: #c0392b;
+        }
+        .error-message button {
+            padding: 10px 20px;
+            margin-top: 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .error-message button:hover {
+            background-color: #2980b9;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -59,6 +89,8 @@
                 </div>
             </div>
         </div>
+        
+        <div id="error-container"></div>
     </div>
     
     <script src="script.js"></script>
