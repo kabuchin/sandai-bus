@@ -1,0 +1,220 @@
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2c3e50;
+    --accent-color: #e74c3c;
+    --background-color: #f5f7fa;
+    --card-bg-color: #ffffff;
+    --text-color: #2c3e50;
+    --light-text-color: #7f8c8d;
+    --border-radius: 12px;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+header h1 {
+    margin-bottom: 8px;
+    color: var(--secondary-color);
+    font-size: 28px;
+}
+
+.current-time {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--primary-color);
+}
+
+.tabs {
+    display: flex;
+    margin-bottom: 20px;
+    background-color: var(--card-bg-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 14px;
+    background: none;
+    border: none;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--light-text-color);
+}
+
+.tab-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.schedule-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: var(--card-bg-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+}
+
+.date-info {
+    font-size: 16px;
+}
+
+#currentDate {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+#scheduleType {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.operation-status {
+    font-size: 14px;
+    padding: 6px 12px;
+    background-color: #2ecc71;
+    color: white;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.operation-status.warning {
+    background-color: #f39c12;
+}
+
+.operation-status.danger {
+    background-color: var(--accent-color);
+}
+
+.bus-cards {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.bus-card {
+    flex: 1;
+    padding: 20px;
+    background-color: var(--card-bg-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.bus-card:hover {
+    transform: translateY(-5px);
+}
+
+.bus-card.next {
+    border-top: 5px solid var(--primary-color);
+}
+
+.bus-card.after-next {
+    border-top: 5px solid var(--secondary-color);
+}
+
+.card-header {
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: var(--light-text-color);
+}
+
+.bus-card .time {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.bus-card .remaining {
+    font-size: 14px;
+    color: var(--light-text-color);
+}
+
+.upcoming-buses {
+    background-color: var(--card-bg-color);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    box-shadow: var(--shadow);
+}
+
+.upcoming-buses h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: var(--secondary-color);
+}
+
+.bus-list {
+    list-style-type: none;
+}
+
+.bus-list-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.bus-list-item:last-child {
+    border-bottom: none;
+}
+
+.bus-time {
+    font-weight: 500;
+}
+
+.bus-remaining {
+    color: var(--light-text-color);
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 15px;
+    }
+    
+    header h1 {
+        font-size: 24px;
+    }
+    
+    .bus-card .time {
+        font-size: 28px;
+    }
+    
+    .schedule-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .operation-status {
+        align-self: flex-start;
+    }
+}

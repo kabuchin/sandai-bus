@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>バス時刻案内</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>バス時刻案内</h1>
+            <div class="current-time" id="currentTime"></div>
+        </header>
+        
+        <div class="tabs">
+            <button class="tab-btn active" data-direction="産業大学前発">産業大学前発</button>
+            <button class="tab-btn" data-direction="JR住道駅発">JR住道駅発</button>
+        </div>
+        
+        <div class="schedule-info">
+            <div class="date-info">
+                <div id="currentDate"></div>
+                <div id="scheduleType"></div>
+            </div>
+            <div class="operation-status" id="operationStatus"></div>
+        </div>
+        
+        <div class="bus-cards">
+            <div class="bus-card next">
+                <div class="card-header">次のバス</div>
+                <div class="time" id="nextBusTime">--:--</div>
+                <div class="remaining" id="nextBusRemaining"></div>
+            </div>
+            <div class="bus-card after-next">
+                <div class="card-header">次々のバス</div>
+                <div class="time" id="afterNextBusTime">--:--</div>
+                <div class="remaining" id="afterNextBusRemaining"></div>
+            </div>
+        </div>
+        
+        <div class="upcoming-buses" id="upcomingBusList">
+            <!-- ここに今後のバス時刻リストが表示されます -->
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
