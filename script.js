@@ -64,6 +64,9 @@ async function init() {
         // DOM要素の確認
         checkRequiredElements();
         
+        // タブバーの設定
+        setupTabBars();
+        
         // データの読み込み
         const [timeResponse, dayResponse] = await Promise.all([
             fetch('time.json'),
@@ -268,7 +271,7 @@ function updateDirectionDisplay(direction, directionSuffix, hour, minute, applic
         const upcomingBusListEl = document.getElementById(`upcomingBusList-${directionSuffix}`);
         if (upcomingBusListEl) {
             if (upcomingBuses.length > 0) {
-                let html = '<h3>今後の発車時刻</h3><ul class="bus-list">';
+                let html = '<ul class="bus-list">';
                 upcomingBuses.forEach(bus => {
                     html += `
                         <li class="bus-list-item">
@@ -343,6 +346,25 @@ function updateDisplay() {
         updateDirectionDisplay(stationDirection, 'station', hour, minute, applicableSchedule);
     } catch (error) {
         displayError('表示の更新中にエラーが発生しました', error.message);
+    }
+}
+
+// タブバーの開閉機能を設定
+function setupTabBars() {
+    try {
+        // タブバーの開閉機能
+        const tabBars = document.querySelectorAll('.tab-bar');
+        tabBars.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const content = tab.nextElementSibling;
+                if (content) {
+                    content.classList.toggle('closed');
+                    tab.classList.toggle('open');
+                }
+            });
+        });
+    } catch (error) {
+        console.error('タブバーの設定中にエラーが発生しました:', error);
     }
 }
 
