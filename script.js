@@ -271,7 +271,7 @@ function updateDirectionDisplay(direction, directionSuffix, hour, minute, applic
         const upcomingBusListEl = document.getElementById(`upcomingBusList-${directionSuffix}`);
         if (upcomingBusListEl) {
             if (upcomingBuses.length > 0) {
-                let html = '<ul class="bus-list">';
+                let html = '<h3>今後の発車時刻</h3><ul class="bus-list">';
                 upcomingBuses.forEach(bus => {
                     html += `
                         <li class="bus-list-item">
@@ -283,7 +283,7 @@ function updateDirectionDisplay(direction, directionSuffix, hour, minute, applic
                 html += '</ul>';
                 upcomingBusListEl.innerHTML = html;
             } else {
-                upcomingBusListEl.innerHTML = '';
+                upcomingBusListEl.innerHTML = '<h3>今後の発車時刻</h3><div class="no-service">この後の便はありません</div>';
             }
         }
     } catch (error) {
@@ -354,6 +354,30 @@ function setupTabBars() {
     try {
         // タブバーの開閉機能
         const tabBars = document.querySelectorAll('.tab-bar');
+        
+        // タブの初期状態を画面サイズに応じて設定
+        const setInitialTabState = () => {
+            const isMobile = window.innerWidth <= 600;
+            tabBars.forEach(tab => {
+                const content = tab.nextElementSibling;
+                if (content) {
+                    if (isMobile) {
+                        // モバイルでは閉じた状態で開始
+                        content.classList.add('closed');
+                        tab.classList.remove('open');
+                    } else {
+                        // デスクトップでは開いた状態で開始
+                        content.classList.remove('closed');
+                        tab.classList.add('open');
+                    }
+                }
+            });
+        };
+        
+        // 初期状態を設定
+        setInitialTabState();
+        
+        // クリックイベントを設定
         tabBars.forEach(tab => {
             tab.addEventListener('click', () => {
                 const content = tab.nextElementSibling;
@@ -362,6 +386,11 @@ function setupTabBars() {
                     tab.classList.toggle('open');
                 }
             });
+        });
+        
+        // リサイズ時にも状態を調整
+        window.addEventListener('resize', () => {
+            setInitialTabState();
         });
     } catch (error) {
         console.error('タブバーの設定中にエラーが発生しました:', error);

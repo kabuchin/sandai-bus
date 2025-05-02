@@ -173,7 +173,49 @@ body {
     border-radius: var(--border-radius);
     padding: 15px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    overflow-x: hidden; /* 横スクロールを防止 */
+    overflow: hidden; /* 横スクロールを防止 */
+}
+
+/* タブバースタイル */
+.tab-bar {
+    display: none; /* デフォルトでは非表示 */
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    padding: 12px 15px;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    margin-bottom: 0;
+}
+
+.tab-bar::after {
+    content: '▼';
+    position: absolute;
+    right: 15px;
+    transition: transform 0.3s ease;
+}
+
+.tab-bar.open::after {
+    transform: rotate(180deg);
+}
+
+/* タブコンテンツのスタイル調整 */
+.tab-content {
+    transition: max-height 0.3s ease, padding 0.3s ease, opacity 0.3s ease;
+    max-height: 400px; /* 十分な高さを確保 */
+    opacity: 1;
+}
+
+.tab-content.closed {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+    overflow: hidden;
+    border: none;
+    margin: 0;
 }
 
 .upcoming-buses h3 {
@@ -213,43 +255,23 @@ body {
     color: var(--accent-color);
 }
 
-/* タブバースタイル */
-.tab-bar {
-    display: none; /* デフォルトでは非表示 */
-    background-color: var(--primary-color);
-    color: white;
-    border-radius: var(--border-radius) var(--border-radius) 0 0;
-    padding: 12px 15px;
-    font-weight: 600;
-    cursor: pointer;
-    user-select: none;
-    position: relative;
+/* デスクトップ表示での常時表示 */
+@media (min-width: 601px) {
+    .upcoming-buses.tab-content {
+        max-height: 400px !important;
+        opacity: 1 !important;
+        padding: 15px !important;
+        margin-top: 20px;
+        overflow: visible;
+    }
+    
+    .upcoming-buses h3 {
+        display: block;
+        margin-bottom: 10px;
+    }
 }
 
-.tab-bar::after {
-    content: '▼';
-    position: absolute;
-    right: 15px;
-    transition: transform 0.3s ease;
-}
-
-.tab-bar.open::after {
-    transform: rotate(180deg);
-}
-
-.tab-content {
-    display: block;
-    transition: max-height 0.3s ease;
-    overflow: hidden;
-}
-
-.tab-content.closed {
-    max-height: 0;
-    overflow: hidden;
-    padding: 0;
-    border: none;
-}
-
+/* レスポンシブ対応の強化 */
 @media (max-width: 600px) {
     .container {
         padding: 10px;
@@ -372,6 +394,27 @@ body {
     /* タブバー表示 */
     .tab-bar {
         display: block;
+        margin-bottom: 0;
+        border-radius: var(--border-radius) var(--border-radius) 0 0;
+    }
+    
+    .tab-bar.open {
+        border-radius: var(--border-radius) var(--border-radius) 0 0;
+    }
+    
+    .upcoming-buses {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
+    
+    .upcoming-buses.closed {
+        margin-top: 0;
+        border-radius: 0;
+    }
+    
+    .upcoming-buses.tab-content:not(.closed) {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
     }
     
     /* 方向タイトルのサイズ調整 */
