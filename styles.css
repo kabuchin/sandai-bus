@@ -33,7 +33,7 @@ body {
 .status-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start; /* 上部揃えに変更 */
     margin-bottom: 24px;
     padding: 15px;
     background-color: var(--card-bg-color);
@@ -201,40 +201,113 @@ body {
 
 @media (max-width: 600px) {
     .container {
-        padding: 15px;
+        padding: 10px;
     }
     
+    /* ヘッダーは縦ではなく横並びで2行に */
     .status-header {
-        flex-direction: column;
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px;
+    }
+    
+    .date-time-info, .schedule-status {
+        width: 50%;
+    }
+    
+    .date-time-info {
         align-items: flex-start;
-        gap: 12px;
     }
     
     .schedule-status {
-        align-items: flex-start;
+        align-items: flex-end;
+    }
+    
+    #currentDate {
+        font-size: 14px;
     }
     
     #scheduleType {
-        text-align: left;
+        text-align: right;
+        font-size: 15px;
+    }
+    
+    .operation-status {
+        font-size: 13px;
+        padding: 4px 10px;
+    }
+    
+    /* バス方向は縦に */
+    .bus-directions {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    /* カードのサイズ調整 */
+    .bus-card {
+        padding: 10px;
     }
     
     .bus-card .time {
-        font-size: 24px;
+        font-size: 22px;
     }
     
-    /* スマホ表示のときは縦に戻す */
-    .bus-directions {
-        flex-direction: column;
+    .bus-card .remaining {
+        font-size: 13px;
+    }
+    
+    /* 今後のバスリストの調整 */
+    .upcoming-buses {
+        padding: 12px 10px;
+    }
+    
+    .upcoming-buses h3 {
+        font-size: 15px;
+        margin-bottom: 8px;
+    }
+    
+    .bus-list-item {
+        padding: 6px 0;
+        font-size: 14px;
+    }
+    
+    /* 方向タイトルのサイズ調整 */
+    .direction-title {
+        font-size: 16px;
+        margin-bottom: 12px;
+        padding-bottom: 6px;
+    }
+    
+    /* カード間の間隔調整 */
+    .bus-cards {
+        gap: 12px;
+        margin-bottom: 16px;
     }
 }
 
 /* レスポンシブ対応の強化 */
 @media (max-width: 800px) and (min-width: 601px) {
     .bus-cards {
-        flex-direction: column;
+        flex-direction: row;
     }
     
     .bus-card {
-        margin-bottom: 10px;
+        padding: 12px;
+    }
+    
+    .bus-card .time {
+        font-size: 24px;
+    }
+}
+
+/* タブレットサイズでも一定の見やすさを確保 */
+@media (max-width: 768px) {
+    .direction-container {
+        padding: 15px;
+    }
+    
+    .upcoming-buses {
+        padding: 12px;
     }
 }
