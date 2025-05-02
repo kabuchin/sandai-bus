@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
     <title>バス時刻情報</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
@@ -65,7 +66,8 @@
                         <div class="remaining" id="afterNextBusRemaining-university"></div>
                     </div>
                 </div>
-                <div class="upcoming-buses" id="upcomingBusList-university">
+                <div class="tab-bar">今後の発車時刻</div>
+                <div class="upcoming-buses tab-content closed" id="upcomingBusList-university">
                     <!-- 産業大学前発の今後のバス時刻が表示されます -->
                 </div>
             </div>
@@ -84,7 +86,8 @@
                         <div class="remaining" id="afterNextBusRemaining-station"></div>
                     </div>
                 </div>
-                <div class="upcoming-buses" id="upcomingBusList-station">
+                <div class="tab-bar">今後の発車時刻</div>
+                <div class="upcoming-buses tab-content closed" id="upcomingBusList-station">
                     <!-- JR住道駅発の今後のバス時刻が表示されます -->
                 </div>
             </div>
