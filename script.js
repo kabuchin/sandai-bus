@@ -14,17 +14,68 @@ function setElementText(id, text) {
     }
 }
 
+// エラー表示関数
+function displayError(message, details) {
+    console.error(`${message}: ${details}`);
+    
+    const errorContainer = document.getElementById('error-container');
+    if (errorContainer) {
+        errorContainer.innerHTML = `
+            <div class="error-message">
+                <h2>エラーが発生しました</h2>
+                <p>${message}</p>
+                <p>エラー詳細: ${details}</p>
+                <button onclick="window.location.reload()">再読み込み</button>
+            </div>
+        `;
+    } else {
+        document.body.innerHTML = `
+            <div class="error-message" style="text-align: center; padding: 20px; margin: 20px; background-color: #ffdddd; border-radius: 10px;">
+                <h2>エラーが発生しました</h2>
+                <p>${message}</p>
+                <p>エラー詳細: ${details}</p>
+                <button onclick="window.location.reload()" style="padding: 10px 20px; margin-top: 10px; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">再読み込み</button>
+            </div>
+        `;
+    }
+}
+
+// 必須DOM要素が存在するか確認する関数
+function checkRequiredElements() {
+    const requiredIds = [
+        'currentTime', 'currentDate', 'scheduleType', 'operationStatus',
+        'nextBusTime-university', 'nextBusRemaining-university', 'afterNextBusTime-university', 'afterNextBusRemaining-university',
+        'nextBusTime-station', 'nextBusRemaining-station', 'afterNextBusTime-station', 'afterNextBusRemaining-station',
+        'upcomingBusList-university', 'upcomingBusList-station'
+    ];
+    
+    const missingElements = requiredIds.filter(id => !document.getElementById(id));
+    
+    if (missingElements.length > 0) {
+        throw new Error(`必要な要素が見つかりません: ${missingElements.join(', ')}`);
+    }
+    
+    return true;
+}
+
 // 初期化関数
 async function init() {
     try {
+        // DOM要素の確認
+        checkRequiredElements();
+        
         // データの読み込み
         const [timeResponse, dayResponse] = await Promise.all([
             fetch('time.json'),
             fetch('day.json')
         ]);
         
-        if (!timeResponse.ok || !dayResponse.ok) {
-            throw new Error('JSONファイルの取得に失敗しました');
+        if (!timeResponse.ok) {
+            throw new Error('time.jsonの取得に失敗しました');
+        }
+        
+        if (!dayResponse.ok) {
+            throw new Error('day.jsonの取得に失敗しました');
         }
         
         timeTableData = await timeResponse.json();
@@ -36,15 +87,7 @@ async function init() {
         // 1分ごとに更新
         setInterval(updateDisplay, 60 * 1000);
     } catch (error) {
-        console.error('データの読み込みに失敗しました:', error);
-        document.body.innerHTML = `
-            <div class="error-message" style="text-align: center; padding: 20px; margin: 20px; background-color: #ffdddd; border-radius: 10px;">
-                <h2>エラーが発生しました</h2>
-                <p>時刻データの読み込みに失敗しました。ページを再読み込みしてください。</p>
-                <p>エラー詳細: ${error.message}</p>
-                <button onclick="window.location.reload()" style="padding: 10px 20px; margin-top: 10px; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">再読み込み</button>
-            </div>
-        `;
+        displayError('時刻データの読み込みに失敗しました。ページを再読み込みしてください。', error.message);
     }
 }
 
@@ -199,112 +242,121 @@ function formatDate(date) {
 
 // 特定の方向のバス情報を更新
 function updateDirectionDisplay(direction, directionSuffix, hour, minute, applicableSchedule) {
-    // 次と次々のバスを取得
-    const { next, afterNext, upcomingBuses } = getNextBuses(direction, hour, minute);
-    
-    // 次のバス表示
-    if (next) {
-        setElementText(`nextBusTime-${directionSuffix}`, formatTime(next.hour, next.minute));
-        setElementText(`nextBusRemaining-${directionSuffix}`, calculateRemainingTime(next.hour, next.minute, next.isNextDay));
-    } else {
-        setElementText(`nextBusTime-${directionSuffix}`, '-- : --');
-        setElementText(`nextBusRemaining-${directionSuffix}`, '本日の運行は終了しました');
-    }
-    
-    // 次々のバス表示
-    if (afterNext) {
-        setElementText(`afterNextBusTime-${directionSuffix}`, formatTime(afterNext.hour, afterNext.minute));
-        setElementText(`afterNextBusRemaining-${directionSuffix}`, calculateRemainingTime(afterNext.hour, afterNext.minute, afterNext.isNextDay));
-    } else {
-        setElementText(`afterNextBusTime-${directionSuffix}`, '-- : --');
-        setElementText(`afterNextBusRemaining-${directionSuffix}`, '本日の運行は終了しました');
-    }
-    
-    // 今後のバス時刻リスト表示
-    const upcomingBusListEl = document.getElementById(`upcomingBusList-${directionSuffix}`);
-    if (upcomingBusListEl) {
-        if (upcomingBuses.length > 0) {
-            let html = '<h3>今後の発車時刻</h3><ul class="bus-list">';
-            upcomingBuses.forEach(bus => {
-                html += `
-                    <li class="bus-list-item">
-                        <span class="bus-time">${formatTime(bus.hour, bus.minute)}</span>
-                        <span class="bus-remaining">${calculateRemainingTime(bus.hour, bus.minute, bus.isNextDay)}</span>
-                    </li>
-                `;
-            });
-            html += '</ul>';
-            upcomingBusListEl.innerHTML = html;
+    try {
+        // 次と次々のバスを取得
+        const { next, afterNext, upcomingBuses } = getNextBuses(direction, hour, minute);
+        
+        // 次のバス表示
+        if (next) {
+            setElementText(`nextBusTime-${directionSuffix}`, formatTime(next.hour, next.minute));
+            setElementText(`nextBusRemaining-${directionSuffix}`, calculateRemainingTime(next.hour, next.minute, next.isNextDay));
         } else {
-            upcomingBusListEl.innerHTML = '';
+            setElementText(`nextBusTime-${directionSuffix}`, '-- : --');
+            setElementText(`nextBusRemaining-${directionSuffix}`, '本日の運行は終了しました');
         }
-    } else {
-        console.warn(`upcomingBusList-${directionSuffix} 要素が見つかりません`);
+        
+        // 次々のバス表示
+        if (afterNext) {
+            setElementText(`afterNextBusTime-${directionSuffix}`, formatTime(afterNext.hour, afterNext.minute));
+            setElementText(`afterNextBusRemaining-${directionSuffix}`, calculateRemainingTime(afterNext.hour, afterNext.minute, afterNext.isNextDay));
+        } else {
+            setElementText(`afterNextBusTime-${directionSuffix}`, '-- : --');
+            setElementText(`afterNextBusRemaining-${directionSuffix}`, '本日の運行は終了しました');
+        }
+        
+        // 今後のバス時刻リスト表示
+        const upcomingBusListEl = document.getElementById(`upcomingBusList-${directionSuffix}`);
+        if (upcomingBusListEl) {
+            if (upcomingBuses.length > 0) {
+                let html = '<h3>今後の発車時刻</h3><ul class="bus-list">';
+                upcomingBuses.forEach(bus => {
+                    html += `
+                        <li class="bus-list-item">
+                            <span class="bus-time">${formatTime(bus.hour, bus.minute)}</span>
+                            <span class="bus-remaining">${calculateRemainingTime(bus.hour, bus.minute, bus.isNextDay)}</span>
+                        </li>
+                    `;
+                });
+                html += '</ul>';
+                upcomingBusListEl.innerHTML = html;
+            } else {
+                upcomingBusListEl.innerHTML = '';
+            }
+        }
+    } catch (error) {
+        console.error(`${direction}のバス情報更新中にエラーが発生しました:`, error);
     }
 }
 
 // 全体の表示を更新
 function updateDisplay() {
-    if (!timeTableData || !dayScheduleData) {
-        console.error('時刻表データが読み込まれていません');
-        return;
-    }
-    
-    const now = new Date();
-    const hour = now.getHours();
-    const minute = now.getMinutes();
-    
-    // 現在時刻の表示
-    setElementText('currentTime', formatTime(hour, minute));
-    
-    // 日付情報の表示
-    setElementText('currentDate', formatDate(now));
-    
-    // 適用中のダイヤ種別を取得
-    const applicableSchedule = getApplicableSchedule(now);
-    setElementText('scheduleType', applicableSchedule.type);
-    
-    // 運行状況の表示
-    const operationStatusEl = document.getElementById('operationStatus');
-    if (operationStatusEl) {
-        if (!applicableSchedule.isOperating) {
-            operationStatusEl.textContent = '本日運休';
-            operationStatusEl.classList.add('danger');
-            
-            // 運休時は両方向の時刻表示をクリア
-            const universityList = document.getElementById('upcomingBusList-university');
-            const stationList = document.getElementById('upcomingBusList-station');
-            
-            if (universityList) universityList.innerHTML = '<div class="no-service">本日のバスの運行はありません</div>';
-            if (stationList) stationList.innerHTML = '<div class="no-service">本日のバスの運行はありません</div>';
-            
-            ['university', 'station'].forEach(directionSuffix => {
-                setElementText(`nextBusTime-${directionSuffix}`, '-- : --');
-                setElementText(`nextBusRemaining-${directionSuffix}`, '運休');
-                setElementText(`afterNextBusTime-${directionSuffix}`, '-- : --');
-                setElementText(`afterNextBusRemaining-${directionSuffix}`, '運休');
-            });
-            
+    try {
+        if (!timeTableData || !dayScheduleData) {
+            console.error('時刻表データが読み込まれていません');
             return;
-        } else {
-            operationStatusEl.textContent = '運行中';
-            operationStatusEl.classList.remove('danger');
         }
-    } else {
-        console.warn('operationStatus 要素が見つかりません');
+        
+        const now = new Date();
+        const hour = now.getHours();
+        const minute = now.getMinutes();
+        
+        // 現在時刻の表示
+        setElementText('currentTime', formatTime(hour, minute));
+        
+        // 日付情報の表示
+        setElementText('currentDate', formatDate(now));
+        
+        // 適用中のダイヤ種別を取得
+        const applicableSchedule = getApplicableSchedule(now);
+        setElementText('scheduleType', applicableSchedule.type);
+        
+        // 運行状況の表示
+        const operationStatusEl = document.getElementById('operationStatus');
+        if (operationStatusEl) {
+            if (!applicableSchedule.isOperating) {
+                operationStatusEl.textContent = '本日運休';
+                operationStatusEl.classList.add('danger');
+                
+                // 運休時は両方向の時刻表示をクリア
+                const universityList = document.getElementById('upcomingBusList-university');
+                const stationList = document.getElementById('upcomingBusList-station');
+                
+                if (universityList) universityList.innerHTML = '<div class="no-service">本日のバスの運行はありません</div>';
+                if (stationList) stationList.innerHTML = '<div class="no-service">本日のバスの運行はありません</div>';
+                
+                ['university', 'station'].forEach(directionSuffix => {
+                    setElementText(`nextBusTime-${directionSuffix}`, '-- : --');
+                    setElementText(`nextBusRemaining-${directionSuffix}`, '運休');
+                    setElementText(`afterNextBusTime-${directionSuffix}`, '-- : --');
+                    setElementText(`afterNextBusRemaining-${directionSuffix}`, '運休');
+                });
+                
+                return;
+            } else {
+                operationStatusEl.textContent = '運行中';
+                operationStatusEl.classList.remove('danger');
+            }
+        }
+        
+        // 両方向のバス情報を更新
+        updateDirectionDisplay(universityDirection, 'university', hour, minute, applicableSchedule);
+        updateDirectionDisplay(stationDirection, 'station', hour, minute, applicableSchedule);
+    } catch (error) {
+        displayError('表示の更新中にエラーが発生しました', error.message);
     }
-    
-    // 両方向のバス情報を更新
-    updateDirectionDisplay(universityDirection, 'university', hour, minute, applicableSchedule);
-    updateDirectionDisplay(stationDirection, 'station', hour, minute, applicableSchedule);
 }
 
 // 要素の読み込み完了を確認してから初期化
 function domReadyInit() {
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
+    try {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => setTimeout(init, 100));
+        } else {
+            // DOMが既にロード済みの場合、少し遅延させて実行
+            setTimeout(init, 100);
+        }
+    } catch (error) {
+        displayError('アプリケーション初期化中にエラーが発生しました', error.message);
     }
 }
 
