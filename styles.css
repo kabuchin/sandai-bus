@@ -10,6 +10,20 @@
     --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+/* ダークモード用の変数 */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --primary-color: #4aa3df;
+        --secondary-color: #a1b2c3;
+        --accent-color: #e74c3c;
+        --background-color: #1a1a2e;
+        --card-bg-color: #22223b;
+        --text-color: #e0e0e0;
+        --light-text-color: #a9a9b3;
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -199,6 +213,43 @@ body {
     color: var(--accent-color);
 }
 
+/* タブバースタイル */
+.tab-bar {
+    display: none; /* デフォルトでは非表示 */
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+    padding: 12px 15px;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+}
+
+.tab-bar::after {
+    content: '▼';
+    position: absolute;
+    right: 15px;
+    transition: transform 0.3s ease;
+}
+
+.tab-bar.open::after {
+    transform: rotate(180deg);
+}
+
+.tab-content {
+    display: block;
+    transition: max-height 0.3s ease;
+    overflow: hidden;
+}
+
+.tab-content.closed {
+    max-height: 0;
+    overflow: hidden;
+    padding: 0;
+    border: none;
+}
+
 @media (max-width: 600px) {
     .container {
         padding: 10px;
@@ -284,6 +335,65 @@ body {
         gap: 12px;
         margin-bottom: 16px;
     }
+    
+    /* 文字サイズを全体的に大きく */
+    .current-time {
+        font-size: 28px; /* 時刻を大きく */
+    }
+    
+    #currentDate {
+        font-size: 15px;
+    }
+    
+    #scheduleType {
+        text-align: right;
+        font-size: 16px;
+        font-weight: 700;
+    }
+    
+    .operation-status {
+        font-size: 14px;
+        padding: 5px 12px;
+    }
+    
+    .card-header {
+        font-size: 15px;
+    }
+    
+    .bus-card .time {
+        font-size: 26px; /* 時刻表示を大きく */
+        font-weight: 700;
+    }
+    
+    .bus-card .remaining {
+        font-size: 15px;
+    }
+    
+    /* タブバー表示 */
+    .tab-bar {
+        display: block;
+    }
+    
+    /* 方向タイトルのサイズ調整 */
+    .direction-title {
+        font-size: 18px; /* タイトルを大きく */
+        margin-bottom: 14px;
+        padding-bottom: 8px;
+    }
+    
+    /* 今後のバス時刻リストの調整 */
+    .upcoming-buses h3 {
+        font-size: 16px;
+    }
+    
+    .bus-list-item {
+        padding: 8px 0;
+        font-size: 15px; /* リストの文字サイズを大きく */
+    }
+    
+    .bus-time {
+        font-weight: 600;
+    }
 }
 
 /* レスポンシブ対応の強化 */
@@ -309,5 +419,41 @@ body {
     
     .upcoming-buses {
         padding: 12px;
+    }
+}
+
+/* ダークモード時の特別調整 */
+@media (prefers-color-scheme: dark) {
+    .operation-status {
+        background-color: #2a9d5f;
+    }
+    
+    .operation-status.warning {
+        background-color: #e67e22;
+    }
+    
+    .operation-status.danger {
+        background-color: #c0392b;
+    }
+    
+    .bus-card {
+        background-color: var(--background-color);
+    }
+    
+    .bus-card:hover {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+    }
+    
+    .upcoming-buses {
+        background-color: var(--background-color);
+    }
+    
+    .error-message {
+        background-color: #391f1f;
+        color: #ff6b6b;
+    }
+    
+    .error-message h2 {
+        color: #ff9f9f;
     }
 }
