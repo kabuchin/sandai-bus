@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light dark">
-    <title>バス時刻情報</title>
+    <title>産大バス時刻情報</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" defer></script>
     <style>
         .error-message {
             text-align: center;
@@ -41,13 +42,26 @@
 <body>
     <div class="container">
         <header class="status-header">
-            <div class="date-time-info">
+            <div class="date-time-info clickable" id="dateTimeInfo" 
+                 title="クリックして日時を設定" 
+                 role="button" 
+                 tabindex="0" 
+                 aria-label="日時設定を開く">
                 <div class="current-time" id="currentTime"></div>
-                <div id="currentDate"></div>
+                <div class="current-date" id="currentDate"></div>
             </div>
             <div class="schedule-status">
                 <div id="scheduleType"></div>
                 <div class="operation-status" id="operationStatus"></div>
+            </div>
+            <div class="header-actions">
+                <button id="menuButton" class="menu-btn" title="メニュー" aria-label="メニューを開く">
+                    <span class="menu-icon">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                </button>
             </div>
         </header>
         
@@ -96,6 +110,138 @@
         <div id="error-container"></div>
     </div>
     
+    <!-- 時刻設定モーダル -->
+    <div id="timeModal" class="modal" role="dialog" aria-labelledby="modalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">日時を設定</h3>
+                <span class="close" id="closeModal" aria-label="モーダルを閉じる" role="button" tabindex="0">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="time-setter">
+                    <div class="current-time-display">
+                        <span id="currentTimeDisplay" aria-live="polite">現在時刻で表示中</span>
+                    </div>
+                    <div class="datetime-inputs">
+                        <div class="date-input-group">
+                            <label for="dateInput">日付:</label>
+                            <input type="date" id="dateInput" aria-describedby="currentTimeDisplay">
+                        </div>
+                        <div class="time-input-group">
+                            <label for="timeInput">時刻:</label>
+                            <input type="time" id="timeInput" aria-describedby="currentTimeDisplay">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button id="useCurrentTime" class="btn btn-secondary">現在時刻に戻す</button>
+                    <button id="setTime" class="btn btn-primary">この時刻で表示</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- メニューモーダル -->
+    <div id="menuModal" class="modal" role="dialog" aria-labelledby="menuModalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="menuModalTitle">メニュー</h3>
+                <span class="close" id="closeMenuModal" aria-label="モーダルを閉じる" role="button" tabindex="0">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="menu-options">
+                    <div class="menu-section">
+                        <h4>リンク</h4>
+                        <a href="https://kabuchin.f5.si" target="_blank" class="menu-link-btn">
+                            トップページ
+                        </a>
+                        <a href="https://github.com/kabuchin" target="_blank" class="menu-link-btn">
+                            GitHub
+                        </a>
+                    </div>
+                    <div class="menu-section">
+                        <h4>ツール</h4>
+                        <a href="https://picon.f5.si/" target="_blank" class="menu-link-btn">
+                            画像フォーマット変換
+                        </a>
+                        <a href="https://img2pdf.f5.si/" target="_blank" class="menu-link-btn">
+                            画像からPDFに変換
+                        </a>
+                        <a href="https://sandai-bus.f5.si" target="_blank" class="menu-link-btn">
+                            産大バスの時刻表
+                        </a>
+                    </div>
+                    <div class="menu-section">
+                        <h4>共有</h4>
+                        <div class="share-actions">
+                            <button id="shareUrl" class="icon-btn" title="URLをコピー">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.72-1.71"></path>
+                                </svg>
+                            </button>
+                            <button id="showQR" class="icon-btn" title="QRコードで共有">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="5" height="5"></rect>
+                                    <rect x="16" y="3" width="5" height="5"></rect>
+                                    <rect x="3" y="16" width="5" height="5"></rect>
+                                    <path d="M21 16h-3a2 2 0 0 0-2 2v3"></path>
+                                    <path d="M21 21v.01"></path>
+                                    <path d="M12 7v3a2 2 0 0 1-2 2H7"></path>
+                                    <path d="M3 12h.01"></path>
+                                    <path d="M12 3h.01"></path>
+                                    <path d="M12 16v.01"></path>
+                                    <path d="M16 12h1"></path>
+                                    <path d="M21 12v.01"></path>
+                                    <path d="M12 21v-1"></path>
+                                </svg>
+                            </button>
+                            <button id="shareNative" class="icon-btn" title="端末の共有機能" style="display: none;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="18" cy="5" r="3"></circle>
+                                    <circle cx="6" cy="12" r="3"></circle>
+                                    <circle cx="18" cy="19" r="3"></circle>
+                                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- QRコードモーダル -->
+    <div id="qrModal" class="modal" role="dialog" aria-labelledby="qrModalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="qrModalTitle">QRコードで共有</h3>
+                <span class="close" id="closeQRModal" aria-label="モーダルを閉じる" role="button" tabindex="0">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="qr-container">
+                    <canvas id="qrCanvas" width="256" height="256"></canvas>
+                    <p class="qr-description">スマートフォンのカメラでQRコードを読み取ってください</p>
+                    <div class="qr-actions">
+                        <button id="downloadQR" class="btn btn-secondary">QRコードを保存</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- スクリプトの読み込み順序を最適化 -->
+    <script>
+        // QRCode.jsが読み込まれるまで待つ
+        window.addEventListener('load', () => {
+            if (typeof QRCode === 'undefined') {
+                console.warn('QRCode.jsの読み込みに失敗しました。フォールバック機能を使用します。');
+            } else {
+                console.log('QRCode.jsが正常に読み込まれました。');
+            }
+        });
+    </script>
     <script src="script.js"></script>
 </body>
 </html>
