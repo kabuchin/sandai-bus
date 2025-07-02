@@ -1,26 +1,60 @@
+/* ライトモード（デフォルト） */
 :root {
-    --primary-color: #3498db;
+    --primary-color: #4a90e2;
     --secondary-color: #2c3e50;
     --accent-color: #e74c3c;
-    --background-color: #f5f7fa;
+    --background-color: #f8fafc;
     --card-bg-color: #ffffff;
-    --text-color: #2c3e50;
-    --light-text-color: #7f8c8d;
+    --text-color: #1a202c;
+    --light-text-color: #4a5568;
+    --border-color: #e2e8f0;
     --border-radius: 12px;
-    --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --shadow: 0 4px 20px rgba(74, 144, 226, 0.15);
+    --header-gradient: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    --card-gradient: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    --modal-bg: rgba(0, 0, 0, 0.5);
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
 }
 
-/* ダークモード用の変数 */
+/* ダークモード */
+[data-theme="dark"] {
+    --primary-color: #6ba3f5;
+    --secondary-color: #94a3b8;
+    --accent-color: #f87171;
+    --background-color: #1e293b;
+    --card-bg-color: #334155;
+    --text-color: #e2e8f0;
+    --light-text-color: #94a3b8;
+    --border-color: #475569;
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    --header-gradient: linear-gradient(135deg, #5a8dd1 0%, #6ba3f5 100%);
+    --card-gradient: linear-gradient(135deg, #5a8dd1 0%, #6ba3f5 100%);
+    --modal-bg: rgba(0, 0, 0, 0.6);
+    --success-color: #34d399;
+    --warning-color: #fbbf24;
+    --danger-color: #f87171;
+}
+
+/* システム設定に従う場合のダークモード */
 @media (prefers-color-scheme: dark) {
-    :root {
-        --primary-color: #4aa3df;
-        --secondary-color: #a1b2c3;
-        --accent-color: #e74c3c;
-        --background-color: #1a1a2e;
-        --card-bg-color: #22223b;
-        --text-color: #e0e0e0;
-        --light-text-color: #a9a9b3;
-        --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    :root:not([data-theme="light"]) {
+        --primary-color: #6ba3f5;
+        --secondary-color: #94a3b8;
+        --accent-color: #f87171;
+        --background-color: #1e293b;
+        --card-bg-color: #334155;
+        --text-color: #e2e8f0;
+        --light-text-color: #94a3b8;
+        --border-color: #475569;
+        --shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        --header-gradient: linear-gradient(135deg, #5a8dd1 0%, #6ba3f5 100%);
+        --card-gradient: linear-gradient(135deg, #5a8dd1 0%, #6ba3f5 100%);
+        --modal-bg: rgba(0, 0, 0, 0.6);
+        --success-color: #34d399;
+        --warning-color: #fbbf24;
+        --danger-color: #f87171;
     }
 }
 
@@ -50,9 +84,10 @@ body {
     align-items: flex-start; /* 上部揃えに変更 */
     margin-bottom: 24px;
     padding: 15px;
-    background-color: var(--card-bg-color);
+    background: var(--header-gradient);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
+    color: white;
 }
 
 .header-actions {
@@ -75,7 +110,7 @@ body {
     padding: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
     width: 40px;
     height: 40px;
     display: flex;
@@ -84,9 +119,9 @@ body {
 }
 
 .menu-btn:hover {
-    background: #2980b9;
+    filter: brightness(0.9);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
 }
 
 .menu-icon {
@@ -121,16 +156,17 @@ body {
 .current-time {
     font-size: 24px;
     font-weight: 700;
-    color: var(--primary-color);
+    color: white;
 }
 
 #currentDate {
     font-size: 16px;
     font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 #scheduleType {
-    color: var(--primary-color);
+    color: white;
     font-weight: 700;
     font-size: 16px;
     text-align: right;
@@ -139,19 +175,20 @@ body {
 .operation-status {
     font-size: 14px;
     padding: 6px 12px;
-    background-color: #2ecc71;
+    background-color: var(--success-color);
     color: white;
     border-radius: 20px;
     font-weight: 500;
     text-align: center;
+    transition: all 0.3s ease;
 }
 
 .operation-status.warning {
-    background-color: #f39c12;
+    background-color: var(--warning-color);
 }
 
 .operation-status.danger {
-    background-color: var(--accent-color);
+    background-color: var(--danger-color);
 }
 
 /* 方向コンテナスタイル */
@@ -189,29 +226,32 @@ body {
 .bus-card {
     flex: 1;
     padding: 15px;
-    background-color: var(--background-color);
+    background: var(--card-gradient);
+    color: white;
     border-radius: var(--border-radius);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow);
     text-align: center;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .bus-card:hover {
     transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .bus-card.next {
-    border-left: 5px solid var(--primary-color);
+    border-left: 5px solid rgba(255, 255, 255, 0.5);
 }
 
 .bus-card.after-next {
-    border-left: 5px solid var(--secondary-color);
+    border-left: 5px solid rgba(255, 255, 255, 0.3);
 }
 
 .card-header {
     font-size: 14px;
     margin-bottom: 8px;
-    color: var(--light-text-color);
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
 }
 
 .bus-card .time {
@@ -222,15 +262,16 @@ body {
 
 .bus-card .remaining {
     font-size: 14px;
-    color: var(--light-text-color);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .upcoming-buses {
-    background-color: var(--background-color);
+    background-color: var(--card-bg-color);
     border-radius: var(--border-radius);
     padding: 15px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow);
     overflow: hidden; /* 横スクロールを防止 */
+    border: 1px solid var(--border-color);
 }
 
 /* タブバースタイル */
@@ -289,7 +330,7 @@ body {
     display: flex;
     justify-content: space-between;
     padding: 8px 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid var(--border-color);
     overflow: hidden; /* 長いテキストの折り返し */
     text-overflow: ellipsis; /* 長いテキストの省略 */
 }
@@ -334,33 +375,42 @@ body {
         padding: 10px;
     }
     
-    /* ヘッダーは縦ではなく横並びで2行に */
+    /* ヘッダーは横並びを維持、メニューボタンは右端に */
     .status-header {
         flex-direction: row;
+        flex-wrap: wrap;
         justify-content: space-between;
-        gap: 10px;
+        gap: 8px;
         padding: 12px;
-    }
-    
-    .date-time-info, .schedule-status {
-        width: 50%;
-    }
-    
+        align-items: flex-start;
+    }    
     .date-time-info {
+        flex: 1;
+        min-width: 0;
         align-items: flex-start;
     }
     
     .schedule-status {
+        flex: 1;
+        min-width: 0;
         align-items: flex-end;
+        text-align: right;
+        margin-right: 8px;
     }
     
+    .header-actions {
+        flex-shrink: 0;
+    }
+
     #currentDate {
         font-size: 14px;
+        color: rgba(255, 255, 255, 0.9);
     }
     
     #scheduleType {
         text-align: right;
         font-size: 15px;
+        color: white;
     }
     
     .operation-status {
@@ -418,16 +468,19 @@ body {
     /* 文字サイズを全体的に大きく */
     .current-time {
         font-size: 28px; /* 時刻を大きく */
+        color: white;
     }
     
     #currentDate {
         font-size: 15px;
+        color: rgba(255, 255, 255, 0.9);
     }
     
     #scheduleType {
         text-align: right;
         font-size: 16px;
         font-weight: 700;
+        color: white;
     }
     
     .operation-status {
@@ -522,40 +575,35 @@ body {
     }
 }
 
-/* ダークモード時の特別調整 */
-@media (prefers-color-scheme: dark) {
-    .operation-status {
-        background-color: #2a9d5f;
-    }
-    
-    .operation-status.warning {
-        background-color: #e67e22;
-    }
-    
-    .operation-status.danger {
-        background-color: #c0392b;
-    }
-    
-    .bus-card {
-        background-color: var(--background-color);
-    }
-    
-    .bus-card:hover {
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
-    }
-    
-    .upcoming-buses {
-        background-color: var(--background-color);
-    }
-    
-    .error-message {
-        background-color: #391f1f;
-        color: #ff6b6b;
-    }
-    
-    .error-message h2 {
-        color: #ff9f9f;
-    }
+/* テーマ切り替えボタンのスタイル */
+.theme-toggle {
+    background: var(--card-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-color);
+    font-size: 14px;
+}
+
+.theme-toggle:hover {
+    border-color: var(--primary-color);
+    background-color: rgba(74, 144, 226, 0.05);
+    color: var(--primary-color);
+}
+
+.theme-icon {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.3s ease;
+}
+
+.theme-toggle:hover .theme-icon {
+    transform: scale(1.1);
 }
 
 /* クリック可能な日時エリアのスタイル */
@@ -569,21 +617,21 @@ body {
 }
 
 .date-time-info.clickable:hover {
-    background-color: rgba(52, 152, 219, 0.1);
+    background-color: rgba(74, 144, 226, 0.1);
     transform: scale(1.02);
 }
 
 .date-time-info.manual {
-    background-color: rgba(231, 126, 34, 0.1);
-    border: 2px solid rgba(231, 126, 34, 0.3);
+    background-color: rgba(243, 156, 18, 0.15);
+    border: 2px solid rgba(243, 156, 18, 0.3);
 }
 
 .date-time-info.manual .current-time {
-    color: #e67e22;
+    color: #ffd700;
 }
 
 .date-time-info.manual .current-date {
-    color: #d68910;
+    color: rgba(255, 215, 0, 0.9);
 }
 
 /* 古いスタイルを削除 */
@@ -618,7 +666,7 @@ body {
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--modal-bg);
     animation: fadeIn 0.3s ease;
 }
 
@@ -642,7 +690,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 20px 20px 0 20px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid var(--border-color);
     margin-bottom: 20px;
 }
 
@@ -676,11 +724,12 @@ body {
 .current-time-display {
     text-align: center;
     padding: 12px;
-    background-color: rgba(52, 152, 219, 0.1);
+    background-color: rgba(74, 144, 226, 0.1);
     border-radius: 8px;
     font-weight: 500;
     color: var(--primary-color);
-    border: 1px solid rgba(52, 152, 219, 0.2);
+    border: 1px solid rgba(74, 144, 226, 0.2);
+    transition: all 0.3s ease;
 }
 
 .datetime-inputs {
@@ -711,10 +760,10 @@ body {
 .date-input-group input,
 .time-input-group input {
     padding: 10px;
-    border: 2px solid #ddd;
+    border: 2px solid var(--border-color);
     border-radius: 8px;
     font-size: 16px;
-    transition: border-color 0.3s ease;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
     background-color: var(--card-bg-color);
     color: var(--text-color);
 }
@@ -723,7 +772,7 @@ body {
 .time-input-group input:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
 }
 
 .modal-actions {
@@ -748,7 +797,7 @@ body {
 }
 
 .btn-primary:hover {
-    background-color: #2980b9;
+    filter: brightness(0.9);
     transform: translateY(-1px);
 }
 
@@ -758,7 +807,7 @@ body {
 }
 
 .btn-secondary:hover {
-    background-color: #6c7b7d;
+    filter: brightness(0.9);
     transform: translateY(-1px);
 }
 
@@ -778,46 +827,7 @@ body {
     }
 }
 
-/* ダークモード時のモーダルスタイル調整 */
-@media (prefers-color-scheme: dark) {
-    .modal-header {
-        border-bottom-color: rgba(255, 255, 255, 0.1);
-    }
-    
-    .date-input-group input,
-    .time-input-group input {
-        border-color: #444;
-        background-color: var(--background-color);
-    }
-    
-    .date-input-group input:focus,
-    .time-input-group input:focus {
-        border-color: var(--primary-color);
-    }
-    
-    .menu-btn {
-        background: var(--primary-color);
-    }
-    
-    .menu-option-btn,
-    .menu-link-btn {
-        background-color: var(--background-color);
-        border-color: #444;
-    }
-    
-    .menu-section h4 {
-        border-bottom-color: rgba(255, 255, 255, 0.1);
-    }
-    
-    .icon-btn {
-        background-color: var(--background-color);
-        border-color: #444;
-    }
-    
-    .qr-container {
-        background-color: var(--background-color);
-    }
-}
+
 
 /* メニューモーダルのスタイル */
 .menu-options {
@@ -840,13 +850,13 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     padding-bottom: 5px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .menu-option-btn,
 .menu-link-btn {
     padding: 12px 16px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     background-color: var(--card-bg-color);
     color: var(--text-color);
@@ -861,7 +871,7 @@ body {
 .menu-option-btn:hover,
 .menu-link-btn:hover {
     border-color: var(--primary-color);
-    background-color: rgba(52, 152, 219, 0.05);
+    background-color: rgba(74, 144, 226, 0.05);
     transform: translateY(-1px);
 }
 
@@ -870,7 +880,8 @@ body {
 }
 
 .menu-link-btn:hover {
-    color: #2980b9;
+    color: var(--primary-color);
+    filter: brightness(1.1);
 }
 
 .share-actions {
@@ -882,7 +893,7 @@ body {
 
 .icon-btn {
     background: var(--card-bg-color);
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 12px;
     cursor: pointer;
@@ -897,7 +908,7 @@ body {
 
 .icon-btn:hover {
     border-color: var(--primary-color);
-    background-color: rgba(52, 152, 219, 0.05);
+    background-color: rgba(74, 144, 226, 0.05);
     transform: translateY(-1px);
     color: var(--primary-color);
 }
@@ -913,8 +924,9 @@ body {
     align-items: center;
     gap: 20px;
     padding: 20px;
-    background-color: #fafafa;
+    background-color: var(--background-color);
     border-radius: 12px;
+    border: 1px solid var(--border-color);
 }
 
 .qr-description {
@@ -937,13 +949,29 @@ body {
 /* レスポンシブ調整 */
 @media (max-width: 480px) {
     .status-header {
-        flex-direction: column;
-        gap: 15px;
-        align-items: stretch;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: flex-start;
+        padding: 12px;
+    }
+    
+    .date-time-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .schedule-status {
+        flex: 1;
+        min-width: 0;
+        align-items: flex-end;
+        text-align: right;
+        margin-right: 8px;
     }
     
     .header-actions {
-        justify-content: center;
+        flex-shrink: 0;
+        margin-left: auto;
     }
     
     .menu-option-btn {

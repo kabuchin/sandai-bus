@@ -4,38 +4,215 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light dark">
-    <title>産大バス時刻情報</title>
-    <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" defer></script>
+    
+    <!-- ファビコン -->
+    <link rel="icon" type="image/webp" href="bot_bus.webp">
+    <link rel="shortcut icon" type="image/webp" href="bot_bus.webp">
+    <link rel="apple-touch-icon" href="bot_bus.webp">
+    
+    <!-- SEO メタタグ -->
+    <title>産大バス時刻情報 - 大阪産業大学スクールバス</title>
+    <meta name="description" content="大阪産業大学のスクールバス時刻表をリアルタイムで確認。産業大学前発・JR住道駅発の次のバス時刻、残り時間、今後の発車予定を一目で把握できます。">
+    <meta name="keywords" content="大阪産業大学,産大,スクールバス,時刻表,住道駅,産業大学前,バス時刻,リアルタイム">
+    <meta name="author" content="産大バス時刻表">
+    
+    <!-- OGP（Open Graph Protocol）メタタグ -->
+    <meta property="og:title" content="産大バス時刻情報 - 大阪産業大学スクールバス">
+    <meta property="og:description" content="大阪産業大学のスクールバス時刻表をリアルタイムで確認。次のバス時刻や残り時間を一目で把握できます。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://sandai-bus.f5.si">
+    <meta property="og:image" content="https://sandai-bus.f5.si/bot_bus.webp">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="産大バス時刻表">
+    <meta property="og:locale" content="ja_JP">
+    
+    <!-- Twitter Card メタタグ -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="産大バス時刻情報 - 大阪産業大学スクールバス">
+    <meta name="twitter:description" content="大阪産業大学のスクールバス時刻表をリアルタイムで確認。次のバス時刻や残り時間を一目で把握できます。">
+    <meta name="twitter:image" content="https://sandai-bus.f5.si/bot_bus.webp">
+    
+    <!-- その他のメタタグ -->
+    <meta name="theme-color" content="#4a90e2">
+    <meta name="msapplication-TileColor" content="#4a90e2">
+    <meta name="msapplication-TileImage" content="bot_bus.webp">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://sandai-bus.f5.si">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- プリロード -->
+    <link rel="preload" href="time.json" as="fetch" crossorigin>
+    <link rel="preload" href="day.json" as="fetch" crossorigin>
+    <link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="styles.css"></noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="preload" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet"></noscript>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js" async defer></script>
+    
+    <!-- 構造化データ（JSON-LD） -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "産大バス時刻情報",
+        "description": "大阪産業大学のスクールバス時刻表をリアルタイムで確認できるWebアプリケーション",
+        "url": "https://sandai-bus.f5.si",
+        "image": "https://sandai-bus.f5.si/bot_bus.webp",
+        "applicationCategory": "TransportationApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "JPY"
+        },
+        "author": {
+            "@type": "Organization",
+            "name": "産大バス時刻表"
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "産大バス時刻表",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "https://sandai-bus.f5.si/bot_bus.webp"
+            }
+        },
+        "about": {
+            "@type": "Organization",
+            "name": "大阪産業大学",
+            "url": "https://www.osaka-sandai.ac.jp/"
+        },
+        "keywords": "大阪産業大学, スクールバス, 時刻表, 住道駅, 産業大学前, リアルタイム",
+        "inLanguage": "ja",
+        "isAccessibleForFree": true,
+        "isFamilyFriendly": true
+    }
+    </script>
     <style>
+        /* Critical CSS - Above the fold */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .status-header {
+            background: var(--header-gradient);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .current-time {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: white;
+        }
+        
+        .current-date {
+            font-size: 16px;
+            opacity: 0.9;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .bus-directions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .direction-container {
+            background: var(--card-bg-color);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+        
+        .direction-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .bus-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .bus-card {
+            background: var(--card-gradient);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .bus-card .time {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
         .error-message {
             text-align: center;
             padding: 30px;
             margin: 20px auto;
             max-width: 600px;
-            background-color: #ffeeee;
+            background-color: var(--card-bg-color);
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            color: #e74c3c;
+            box-shadow: var(--shadow);
+            color: var(--danger-color);
+            border: 2px solid var(--danger-color);
         }
         .error-message h2 {
             margin-bottom: 15px;
-            color: #c0392b;
+            color: var(--danger-color);
         }
         .error-message button {
             padding: 10px 20px;
             margin-top: 15px;
-            background-color: #3498db;
+            background-color: var(--primary-color);
             color: white;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
         }
         .error-message button:hover {
-            background-color: #2980b9;
+            background-color: var(--primary-color);
+            filter: brightness(0.9);
+            transform: translateY(-1px);
         }
     </style>
 </head>
@@ -151,6 +328,15 @@
             <div class="modal-body">
                 <div class="menu-options">
                     <div class="menu-section">
+                        <h4>表示設定</h4>
+                        <button id="themeToggle" class="theme-toggle">
+                            <svg class="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                            </svg>
+                            <span id="themeText">ダークモード</span>
+                        </button>
+                    </div>
+                    <div class="menu-section">
                         <h4>リンク</h4>
                         <a href="https://kabuchin.f5.si" target="_blank" class="menu-link-btn">
                             トップページ
@@ -233,13 +419,11 @@
     
     <!-- スクリプトの読み込み順序を最適化 -->
     <script>
-        // QRCode.jsが読み込まれるまで待つ
+        // パフォーマンス計測
+        const startTime = performance.now();
         window.addEventListener('load', () => {
-            if (typeof QRCode === 'undefined') {
-                console.warn('QRCode.jsの読み込みに失敗しました。フォールバック機能を使用します。');
-            } else {
-                console.log('QRCode.jsが正常に読み込まれました。');
-            }
+            const loadTime = performance.now() - startTime;
+            console.log(`ページ読み込み完了: ${loadTime.toFixed(2)}ms`);
         });
     </script>
     <script src="script.js"></script>

@@ -1,0 +1,29 @@
+{
+  "name": "産大バス時刻情報",
+  "short_name": "産大バス",
+  "description": "大阪産業大学のスクールバス時刻表をリアルタイムで確認",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#4a90e2",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "bot_bus.webp",
+      "sizes": "any",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "transportation", "utilities"],
+  "screenshots": [
+    {
+      "src": "bot_bus.webp",
+      "sizes": "1280x720",
+      "type": "image/webp",
+      "form_factor": "wide"
+    }
+  ]
+}

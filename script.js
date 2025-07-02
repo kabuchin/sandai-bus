@@ -71,14 +71,66 @@ function checkRequiredElements() {
 }
 
 // 初期化関数
-async function init() {
+// 高速初期化関数 - 時刻表表示を最優先
+async function fastInit() {
     try {
-        // DOM要素の確認
-        checkRequiredElements();
+        // 最小限のDOM要素確認
+        const requiredElements = ['currentTime', 'currentDate', 'scheduleType', 'operationStatus'];
+        for (const id of requiredElements) {
+            if (!document.getElementById(id)) {
+                console.warn(`必須要素 ${id} が見つかりません`);
+            }
+        }
         
-        // QRCode.jsの読み込み確認
-        let qrCodeReady = typeof QRCode !== 'undefined';
-        if (!qrCodeReady) {
+        // JSONデータの並列読み込み（最優先）
+        const dataPromise = loadTimeTableData();
+        
+        // 時刻表データ読み込み完了後すぐに表示
+        await dataPromise;
+        updateDisplay();
+        
+        // 1分ごとの更新を設定（最適化版）
+        setInterval(() => {
+            if (!useManualTime) {
+                optimizedUpdateDisplay();
+            }
+        }, 60 * 1000);
+        
+        // 非必須機能を遅延読み込み
+        setTimeout(initSecondaryFeatures, 100);
+        
+    } catch (error) {
+        displayError('時刻データの読み込みに失敗しました。ページを再読み込みしてください。', error.message);
+    }
+}
+
+// 時刻表データの読み込み（最優先）
+async function loadTimeTableData() {
+    const [timeResponse, dayResponse] = await Promise.all([
+        fetch('time.json'),
+        fetch('day.json')
+    ]);
+    
+    if (!timeResponse.ok) {
+        throw new Error('time.jsonの取得に失敗しました');
+    }
+    
+    if (!dayResponse.ok) {
+        throw new Error('day.jsonの取得に失敗しました');
+    }
+    
+    timeTableData = await timeResponse.json();
+    dayScheduleData = await dayResponse.json();
+}
+
+// 非必須機能の遅延初期化
+function initSecondaryFeatures() {
+    try {
+        // テーママネージャーを初期化
+        ThemeManager.init();
+        
+        // QRCode.jsの確認
+        if (typeof QRCode === 'undefined') {
             console.warn('QRCode.jsが読み込まれていません。QRコード機能は利用できません。');
         }
         
@@ -88,38 +140,18 @@ async function init() {
         // 時刻設定モーダルの設定
         setupTimeModal();
         
-        // メニュー機能の設定
+        // メニュー機能の設定（QRCode依存）
         setupMenuModal();
         
-        // データの読み込み
-        const [timeResponse, dayResponse] = await Promise.all([
-            fetch('time.json'),
-            fetch('day.json')
-        ]);
-        
-        if (!timeResponse.ok) {
-            throw new Error('time.jsonの取得に失敗しました');
-        }
-        
-        if (!dayResponse.ok) {
-            throw new Error('day.jsonの取得に失敗しました');
-        }
-        
-        timeTableData = await timeResponse.json();
-        dayScheduleData = await dayResponse.json();
-        
-        // 初回表示
-        updateDisplay();
-        
-        // 1分ごとに更新（手動時刻設定時は停止）
-        setInterval(() => {
-            if (!useManualTime) {
-                updateDisplay();
-            }
-        }, 60 * 1000);
+        console.log('二次機能の初期化完了');
     } catch (error) {
-        displayError('時刻データの読み込みに失敗しました。ページを再読み込みしてください。', error.message);
+        console.warn('二次機能の初期化中にエラーが発生しました:', error);
     }
+}
+
+async function init() {
+    // 後方互換性のため、fastInitを呼び出し
+    return fastInit();
 }
 
 // 現在の日付に基づいて適用すべき時刻表を取得
@@ -321,6 +353,10 @@ function updateDirectionDisplay(direction, directionSuffix, hour, minute, applic
 }
 
 // 全体の表示を更新
+// 前回の更新時刻をキャッシュして不要な更新を防ぐ
+let lastUpdateMinute = -1;
+let lastScheduleType = '';
+
 function updateDisplay() {
     try {
         if (!timeTableData || !dayScheduleData) {
@@ -331,22 +367,25 @@ function updateDisplay() {
         const now = getCurrentDateTime();
         const hour = now.getHours();
         const minute = now.getMinutes();
+        const currentMinute = hour * 60 + minute;
         
-        // 現在時刻の表示
-        setElementText('currentTime', formatTime(hour, minute));
-        
-        // 日付情報の表示
-        setElementText('currentDate', formatDate(now));
-        
-        // 日時表示の見た目を更新
-        updateDateTimeDisplay();
+        // 分が変わった場合のみ時刻表示を更新
+        if (lastUpdateMinute !== currentMinute) {
+            setElementText('currentTime', formatTime(hour, minute));
+            setElementText('currentDate', formatDate(now));
+            updateDateTimeDisplay();
+            lastUpdateMinute = currentMinute;
+        }
         
         // 適用中のダイヤ種別を取得
         const applicableSchedule = getApplicableSchedule(now);
-        setElementText('scheduleType', applicableSchedule.type);
         
-        // 運行状況の表示
-        updateOperationStatus(applicableSchedule);
+        // スケジュールタイプが変わった場合のみ更新
+        if (lastScheduleType !== applicableSchedule.type) {
+            setElementText('scheduleType', applicableSchedule.type);
+            updateOperationStatus(applicableSchedule);
+            lastScheduleType = applicableSchedule.type;
+        }
         
         // 運行中の場合のみバス情報を更新
         if (applicableSchedule.isOperating) {
@@ -627,6 +666,21 @@ function debounce(func, wait) {
     };
 }
 
+// パフォーマンス最適化のためのRAF（RequestAnimationFrame）デバウンス
+function rafDebounce(fn) {
+    let rafId = null;
+    return function (...args) {
+        if (rafId) return;
+        rafId = requestAnimationFrame(() => {
+            fn.apply(this, args);
+            rafId = null;
+        });
+    };
+}
+
+// 最適化されたDOM更新
+const optimizedUpdateDisplay = rafDebounce(updateDisplay);
+
 // メモリリークを防ぐためのクリーンアップ関数
 function cleanup() {
     // イベントリスナーのクリーンアップ（必要に応じて実装）
@@ -637,7 +691,7 @@ function cleanup() {
 window.addEventListener('beforeunload', cleanup);
 
 // 要素の読み込み完了を確認してから初期化
-// QRCode.jsの読み込み確認
+// QRCode.jsの読み込み確認（非ブロッキング）
 function waitForQRCode() {
     return new Promise((resolve) => {
         if (typeof QRCode !== 'undefined') {
@@ -652,39 +706,24 @@ function waitForQRCode() {
             }
         }, 100);
         
-        // 5秒でタイムアウト
+        // 3秒でタイムアウト（短縮）
         setTimeout(() => {
             clearInterval(checkInterval);
             resolve();
-        }, 5000);
+        }, 3000);
     });
 }
 
 function domReadyInit() {
     try {
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', async () => {
-                // QRCode.jsの読み込みを待つ
-                await waitForQRCode();
-                
-                if (typeof QRCode === 'undefined') {
-                    console.warn('QRCode.jsが読み込まれませんでした。QRコード機能は利用できません。');
-                } else {
-                    console.log('QRCode.jsが正常に読み込まれました。');
-                }
-                
-                setTimeout(init, 100);
+            document.addEventListener('DOMContentLoaded', () => {
+                // 時刻表を即座に初期化
+                fastInit();
             });
         } else {
-            // DOMが既にロード済みの場合、QRCode.jsの確認後に実行
-            waitForQRCode().then(() => {
-                if (typeof QRCode === 'undefined') {
-                    console.warn('QRCode.jsが読み込まれませんでした。QRコード機能は利用できません。');
-                } else {
-                    console.log('QRCode.jsが正常に読み込まれました。');
-                }
-                setTimeout(init, 100);
-            });
+            // DOMが既にロード済みの場合、即座に実行
+            fastInit();
         }
     } catch (error) {
         displayError('アプリケーション初期化中にエラーが発生しました', error.message);
@@ -693,6 +732,30 @@ function domReadyInit() {
 
 // スクリプト読み込み時に初期化を開始
 domReadyInit();
+
+// Service Worker の登録
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+                console.log('Service Worker 登録成功:', registration.scope);
+                
+                // 更新があるかチェック
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // 新しいバージョンが利用可能
+                            showToast('新しいバージョンが利用可能です。ページを再読み込みしてください。');
+                        }
+                    });
+                });
+            })
+            .catch((error) => {
+                console.log('Service Worker 登録失敗:', error);
+            });
+    });
+}
 
 // メニュー機能のセットアップ
 function setupMenuModal() {
@@ -707,10 +770,18 @@ function setupMenuModal() {
         const shareNativeBtn = document.getElementById('shareNative');
         const downloadQRBtn = document.getElementById('downloadQR');
         const qrCanvas = document.getElementById('qrCanvas');
+        const themeToggle = document.getElementById('themeToggle');
         
         if (!menuButton || !menuModal || !qrModal) {
             console.warn('メニュー機能の要素が見つかりません');
             return;
+        }
+        
+        // テーマ切り替えボタンのイベントリスナー
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                ThemeManager.toggleTheme();
+            });
         }
         
         // Web Share API対応チェック
@@ -980,3 +1051,93 @@ function showToast(message) {
         }
     }, 3000);
 }
+
+// テーマ管理関数
+const ThemeManager = {
+    // テーマ設定をローカルストレージから読み取り
+    init() {
+        const savedTheme = localStorage.getItem('theme');
+        
+        if (savedTheme) {
+            this.setTheme(savedTheme);
+        } else {
+            // 初回訪問時はシステム設定に従う
+            this.setTheme('auto');
+        }
+        
+        this.updateThemeButton();
+    },
+    
+    // テーマを設定
+    setTheme(theme) {
+        const root = document.documentElement;
+        
+        switch (theme) {
+            case 'light':
+                root.setAttribute('data-theme', 'light');
+                break;
+            case 'dark':
+                root.setAttribute('data-theme', 'dark');
+                break;
+            case 'auto':
+            default:
+                root.removeAttribute('data-theme');
+                break;
+        }
+        
+        localStorage.setItem('theme', theme);
+        this.currentTheme = theme;
+    },
+    
+    // 次のテーマに切り替え
+    toggleTheme() {
+        const themes = ['auto', 'light', 'dark'];
+        const currentIndex = themes.indexOf(this.currentTheme || 'auto');
+        const nextIndex = (currentIndex + 1) % themes.length;
+        const nextTheme = themes[nextIndex];
+        
+        this.setTheme(nextTheme);
+        this.updateThemeButton();
+        
+        // フィードバック用トースト表示
+        const themeNames = {
+            'auto': 'システム設定',
+            'light': 'ライトモード',
+            'dark': 'ダークモード'
+        };
+        showToast(`テーマを${themeNames[nextTheme]}に変更しました`);
+    },
+    
+    // テーマボタンの表示を更新
+    updateThemeButton() {
+        const themeButton = document.getElementById('themeToggle');
+        const themeText = document.getElementById('themeText');
+        const themeIcon = themeButton?.querySelector('.theme-icon');
+        
+        if (!themeButton || !themeText || !themeIcon) return;
+        
+        const currentTheme = this.currentTheme || 'auto';
+        
+        const themeConfig = {
+            'auto': {
+                text: 'システム設定',
+                icon: `<path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"></path>`
+            },
+            'light': {
+                text: 'ライトモード',
+                icon: `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`
+            },
+            'dark': {
+                text: 'ダークモード',
+                icon: `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`
+            }
+        };
+        
+        const config = themeConfig[currentTheme];
+        themeText.textContent = config.text;
+        themeIcon.innerHTML = config.icon;
+    }
+};
+
+// 初期化時にテーマを適用
+ThemeManager.init();
