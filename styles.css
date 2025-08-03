@@ -18,6 +18,31 @@
     --danger-color: #e74c3c;
 }
 
+/* モバイルファーストの基本設定 */
+html {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    touch-action: manipulation;
+}
+
+/* タップハイライトを無効化 */
+* {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* テキスト選択可能な要素 */
+p, span, div.time, div.remaining, div.current-time, div.current-date {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
 /* ダークモード */
 [data-theme="dark"] {
     --primary-color: #6ba3f5;

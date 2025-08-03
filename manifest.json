@@ -1,14 +1,17 @@
 {
-  "name": "産大バス時刻情報",
-  "short_name": "産大バス",
-  "description": "大阪産業大学のスクールバス時刻表をリアルタイムで確認",
-  "start_url": "/",
+  "name": "産大バス時刻表 - 大阪産業大学スクールバス時刻表",
+  "short_name": "産大バス時刻表",
+  "description": "産大バス・大阪産業大学スクールバス時刻表をリアルタイムで確認。住道駅から大阪産業大学へのバス時刻を簡単にチェックできます。",
+  "start_url": "/?utm_source=pwa",
+  "id": "sandai-bus-timetable",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#f8fafc",
   "theme_color": "#4a90e2",
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "ja",
+  "dir": "ltr",
   "icons": [
     {
       "src": "bot_bus.webp",
@@ -17,13 +20,45 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["education", "transportation", "utilities"],
+  "categories": ["education", "transportation", "utilities", "productivity"],
+  "keywords": ["産大バス", "大阪産業大学", "バス", "時刻表", "住道駅", "スクールバス", "リアルタイム"],
   "screenshots": [
     {
       "src": "bot_bus.webp",
       "sizes": "1280x720",
       "type": "image/webp",
-      "form_factor": "wide"
+      "form_factor": "wide",
+      "label": "産大バス時刻表のメイン画面"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "住道駅発",
+      "short_name": "住道駅",
+      "description": "JR住道駅発のバス時刻を確認",
+      "url": "/?direction=station",
+      "icons": [
+        {
+          "src": "bot_bus.webp",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "産業大学前発",
+      "short_name": "産業大学前",
+      "description": "産業大学前発のバス時刻を確認",
+      "url": "/?direction=university",
+      "icons": [
+        {
+          "src": "bot_bus.webp",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
 }

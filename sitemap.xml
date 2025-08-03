@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+    <url>
+        <loc>https://sandai-bus.f5.si/</loc>
+        <lastmod>2024-12-01</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>1.0</priority>
+        <mobile:mobile/>
+        <image:image>
+            <image:loc>https://sandai-bus.f5.si/bot_bus.webp</image:loc>
+            <image:title>産大バス時刻表 - 大阪産業大学スクールバス</image:title>
+            <image:caption>産大バス・大阪産業大学スクールバス時刻表をリアルタイムで確認</image:caption>
+        </image:image>
+    </url>
+</urlset>

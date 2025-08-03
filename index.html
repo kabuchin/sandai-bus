@@ -2,8 +2,12 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
     <meta name="color-scheme" content="light dark">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     
     <!-- ファビコン -->
     <link rel="icon" type="image/webp" href="bot_bus.webp">
@@ -11,27 +15,41 @@
     <link rel="apple-touch-icon" href="bot_bus.webp">
     
     <!-- SEO メタタグ -->
-    <title>産大バス時刻情報 - 大阪産業大学スクールバス</title>
-    <meta name="description" content="大阪産業大学のスクールバス時刻表をリアルタイムで確認。産業大学前発・JR住道駅発の次のバス時刻、残り時間、今後の発車予定を一目で把握できます。">
-    <meta name="keywords" content="大阪産業大学,産大,スクールバス,時刻表,住道駅,産業大学前,バス時刻,リアルタイム">
+    <title>産大バス時刻表 - 大阪産業大学スクールバス時刻表 | 住道駅〜大阪産業大学</title>
+    <meta name="description" content="産大バス時刻表・大阪産業大学スクールバス時刻表をリアルタイムで確認。住道駅から大阪産業大学、産業大学前発・JR住道駅発の次のバス時刻、残り時間、今後の発車予定を一目で把握できます。産大バス最新情報をお届け。">
+    <meta name="keywords" content="産大バス,大阪産業大学 バス 時刻表,産大 バス,大阪産業大学バス,大阪産業大学 バス,産業大学 バス,住道駅から大阪産業大学 バス,住道から大阪産業大学 バス,住道から大阪産業大学,大阪産業大学,産大,スクールバス,時刻表,住道駅,産業大学前,バス時刻,リアルタイム,大産大,近鉄バス">
     <meta name="author" content="産大バス時刻表">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="googlebot" content="index, follow">
+    <meta name="google-site-verification" content="">
+    <link rel="alternate" hreflang="ja" href="https://sandai-bus.f5.si/">
+    <meta name="geo.region" content="JP-27">
+    <meta name="geo.placename" content="大阪府大東市">
+    <meta name="geo.position" content="34.730283;135.624306">
+    <meta name="ICBM" content="34.730283, 135.624306">
     
     <!-- OGP（Open Graph Protocol）メタタグ -->
-    <meta property="og:title" content="産大バス時刻情報 - 大阪産業大学スクールバス">
-    <meta property="og:description" content="大阪産業大学のスクールバス時刻表をリアルタイムで確認。次のバス時刻や残り時間を一目で把握できます。">
+    <meta property="og:title" content="産大バス時刻表 - 大阪産業大学スクールバス時刻表">
+    <meta property="og:description" content="産大バス時刻表・大阪産業大学スクールバス時刻表をリアルタイムで確認。住道駅から大阪産業大学への次のバス時刻や残り時間を一目で把握できます。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://sandai-bus.f5.si">
     <meta property="og:image" content="https://sandai-bus.f5.si/bot_bus.webp">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="産大バス時刻表 - 大阪産業大学スクールバス">
     <meta property="og:site_name" content="産大バス時刻表">
     <meta property="og:locale" content="ja_JP">
+    <meta property="article:author" content="産大バス時刻表">
+    <meta property="article:publisher" content="https://sandai-bus.f5.si">
     
     <!-- Twitter Card メタタグ -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="産大バス時刻情報 - 大阪産業大学スクールバス">
-    <meta name="twitter:description" content="大阪産業大学のスクールバス時刻表をリアルタイムで確認。次のバス時刻や残り時間を一目で把握できます。">
+    <meta name="twitter:title" content="産大バス時刻表 - 大阪産業大学スクールバス時刻表">
+    <meta name="twitter:description" content="産大バス時刻表・大阪産業大学スクールバス時刻表をリアルタイムで確認。住道駅から大阪産業大学への次のバス時刻や残り時間を一目で把握できます。">
     <meta name="twitter:image" content="https://sandai-bus.f5.si/bot_bus.webp">
+    <meta name="twitter:image:alt" content="産大バス時刻表 - 大阪産業大学スクールバス">
+    <meta name="twitter:site" content="@sandai_bus">
+    <meta name="twitter:creator" content="@sandai_bus">
     
     <!-- その他のメタタグ -->
     <meta name="theme-color" content="#4a90e2">
@@ -41,8 +59,18 @@
     <!-- Canonical URL -->
     <link rel="canonical" href="https://sandai-bus.f5.si">
     
+    <!-- サイトマップ -->
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
+    
+    <!-- DNS プリフェッチとプリコネクト -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://www.google-analytics.com">
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com">
     
     <!-- プリロード -->
     <link rel="preload" href="time.json" as="fetch" crossorigin>
@@ -58,12 +86,14 @@
     {
         "@context": "https://schema.org",
         "@type": "WebApplication",
-        "name": "産大バス時刻情報",
-        "description": "大阪産業大学のスクールバス時刻表をリアルタイムで確認できるWebアプリケーション",
+        "name": "産大バス時刻表",
+        "alternateName": ["大阪産業大学 バス 時刻表", "産大 バス", "大阪産業大学バス"],
+        "description": "産大バス・大阪産業大学のスクールバス時刻表をリアルタイムで確認できるWebアプリケーション。住道駅から大阪産業大学へのバス時刻を簡単にチェック。",
         "url": "https://sandai-bus.f5.si",
         "image": "https://sandai-bus.f5.si/bot_bus.webp",
         "applicationCategory": "TransportationApplication",
         "operatingSystem": "Web Browser",
+        "browserRequirements": "Requires JavaScript. Requires HTML5.",
         "offers": {
             "@type": "Offer",
             "price": "0",
@@ -78,18 +108,107 @@
             "name": "産大バス時刻表",
             "logo": {
                 "@type": "ImageObject",
-                "url": "https://sandai-bus.f5.si/bot_bus.webp"
+                "url": "https://sandai-bus.f5.si/bot_bus.webp",
+                "width": 512,
+                "height": 512
             }
         },
-        "about": {
-            "@type": "Organization",
-            "name": "大阪産業大学",
-            "url": "https://www.osaka-sandai.ac.jp/"
-        },
-        "keywords": "大阪産業大学, スクールバス, 時刻表, 住道駅, 産業大学前, リアルタイム",
+        "about": [
+            {
+                "@type": "Organization",
+                "name": "大阪産業大学",
+                "alternateName": ["産大", "大産大", "OSU"],
+                "url": "https://www.osaka-sandai.ac.jp/",
+                "address": {
+                    "@type": "PostalAddress",
+                    "addressCountry": "JP",
+                    "addressRegion": "大阪府",
+                    "addressLocality": "大東市",
+                    "streetAddress": "中垣内3-1-1",
+                    "postalCode": "574-8530"
+                }
+            },
+            {
+                "@type": "BusStation",
+                "name": "JR住道駅",
+                "address": {
+                    "@type": "PostalAddress",
+                    "addressCountry": "JP",
+                    "addressRegion": "大阪府",
+                    "addressLocality": "大東市",
+                    "streetAddress": "住道"
+                }
+            }
+        ],
+        "keywords": "産大バス,大阪産業大学 バス 時刻表,産大 バス,大阪産業大学バス,大阪産業大学 バス,産業大学 バス,住道駅から大阪産業大学 バス,住道から大阪産業大学 バス,住道から大阪産業大学,スクールバス,時刻表,リアルタイム",
         "inLanguage": "ja",
         "isAccessibleForFree": true,
-        "isFamilyFriendly": true
+        "isFamilyFriendly": true,
+        "audience": {
+            "@type": "Audience",
+            "audienceType": "大阪産業大学の学生・教職員・関係者"
+        }
+    }
+    </script>
+    
+    <!-- FAQ構造化データ -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "産大バスの時刻表はどこで確認できますか？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "産大バス時刻表は当サイト（https://sandai-bus.f5.si）でリアルタイムに確認できます。大阪産業大学と住道駅間のスクールバス時刻を24時間いつでもチェック可能です。"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "住道駅から大阪産業大学までバスで何分かかりますか？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "住道駅から大阪産業大学まで産大バスで約15-20分程度です。交通状況により前後する場合があります。"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "大阪産業大学のスクールバスは誰でも利用できますか？",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "大阪産業大学のスクールバスは基本的に大学関係者（学生・教職員等）が利用対象となります。詳細は大学にお問い合わせください。"
+                }
+            }
+        ]
+    }
+    </script>
+    
+    <!-- HowTo構造化データ -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": "産大バス時刻表の使い方",
+        "description": "大阪産業大学スクールバス時刻表の確認方法",
+        "step": [
+            {
+                "@type": "HowToStep",
+                "name": "サイトにアクセス",
+                "text": "産大バス時刻表サイト（https://sandai-bus.f5.si）にアクセスします"
+            },
+            {
+                "@type": "HowToStep",
+                "name": "方向を選択",
+                "text": "「産業大学前発」または「JR住道駅発」から確認したい方向を選択します"
+            },
+            {
+                "@type": "HowToStep",
+                "name": "時刻を確認",
+                "text": "次のバス時刻と残り時間、今後の発車予定を確認できます"
+            }
+        ]
     }
     </script>
     <style>
@@ -217,6 +336,12 @@
     </style>
 </head>
 <body>
+    <!-- ページの隠されたキーワード情報 -->
+    <div style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;">
+        <h1>産大バス時刻表 - 大阪産業大学スクールバス時刻表</h1>
+        <p>住道駅から大阪産業大学へのバス時刻表、産大バス最新情報</p>
+    </div>
+    
     <div class="container">
         <header class="status-header">
             <div class="date-time-info clickable" id="dateTimeInfo" 
@@ -285,6 +410,17 @@
         </div>
         
         <div id="error-container"></div>
+        
+        <!-- SEO フッターコンテンツ -->
+        <footer style="margin-top: 40px; padding: 20px 0; border-top: 1px solid var(--border-color); color: var(--light-text-color); font-size: 14px; line-height: 1.5;">
+            <div style="text-align: center; margin-bottom: 15px;">
+                <h2 style="font-size: 18px; color: var(--text-color); margin-bottom: 10px;">産大バス時刻表について</h2>
+                <p>大阪産業大学のスクールバス時刻表を提供する非公式サービスです。住道駅から大阪産業大学、産業大学前からJR住道駅へのシャトルバスの時刻を確認できます。</p>
+            </div>
+            <div style="text-align: center; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                <p>&copy; 2025 kabuchin</p>
+            </div>
+        </footer>
     </div>
     
     <!-- 時刻設定モーダル -->
