@@ -99,7 +99,7 @@ body {
 .container {
     max-width: 800px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 12px;
 }
 
 /* 新しいヘッダースタイル */
@@ -107,8 +107,8 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: flex-start; /* 上部揃えに変更 */
-    margin-bottom: 24px;
-    padding: 15px;
+    margin-bottom: 16px;
+    padding: 12px;
     background: var(--header-gradient);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
@@ -118,13 +118,13 @@ body {
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .menu-btn {
@@ -220,14 +220,14 @@ body {
 .bus-directions {
     display: flex;
     flex-direction: row; /* 横に並べる */
-    gap: 24px;
-    margin-bottom: 24px;
+    gap: 16px;
+    margin-bottom: 16px;
 }
 
 .direction-container {
     background-color: var(--card-bg-color);
     border-radius: var(--border-radius);
-    padding: 20px;
+    padding: 14px;
     box-shadow: var(--shadow);
     flex: 1; /* 各コンテナが均等に幅を取るように */
     min-width: 0; /* flexboxのバグ対応 */
@@ -244,13 +244,13 @@ body {
 
 .bus-cards {
     display: flex;
-    gap: 16px;
-    margin-bottom: 20px;
+    gap: 12px;
+    margin-bottom: 14px;
 }
 
 .bus-card {
     flex: 1;
-    padding: 15px;
+    padding: 12px;
     background: var(--card-gradient);
     color: white;
     border-radius: var(--border-radius);
@@ -264,17 +264,9 @@ body {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
-.bus-card.next {
-    border-left: 5px solid rgba(255, 255, 255, 0.5);
-}
-
-.bus-card.after-next {
-    border-left: 5px solid rgba(255, 255, 255, 0.3);
-}
-
 .card-header {
-    font-size: 14px;
-    margin-bottom: 8px;
+    font-size: 13px;
+    margin-bottom: 6px;
     color: rgba(255, 255, 255, 0.9);
     font-weight: 500;
 }
@@ -293,10 +285,31 @@ body {
 .upcoming-buses {
     background-color: var(--card-bg-color);
     border-radius: var(--border-radius);
-    padding: 15px;
+    padding: 12px;
     box-shadow: var(--shadow);
-    overflow: hidden; /* 横スクロールを防止 */
     border: 1px solid var(--border-color);
+    max-height: 500px; /* 最大高さを設定 */
+    overflow-y: auto; /* 縦スクロールを有効化 */
+    overflow-x: hidden; /* 横スクロールを防止 */
+}
+
+/* スクロールバーのスタイリング（Webkit系ブラウザ） */
+.upcoming-buses::-webkit-scrollbar {
+    width: 8px;
+}
+
+.upcoming-buses::-webkit-scrollbar-track {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+.upcoming-buses::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+.upcoming-buses::-webkit-scrollbar-thumb:hover {
+    background: #357abd;
 }
 
 /* タブバースタイル */
@@ -305,7 +318,7 @@ body {
     background-color: var(--primary-color);
     color: white;
     border-radius: var(--border-radius) var(--border-radius) 0 0;
-    padding: 12px 15px;
+    padding: 10px 12px;
     font-weight: 600;
     cursor: pointer;
     user-select: none;
@@ -342,8 +355,8 @@ body {
 }
 
 .upcoming-buses h3 {
-    font-size: 16px;
-    margin-bottom: 10px;
+    font-size: 15px;
+    margin-bottom: 8px;
     color: var(--secondary-color);
 }
 
@@ -354,7 +367,7 @@ body {
 .bus-list-item {
     display: flex;
     justify-content: space-between;
-    padding: 8px 0;
+    padding: 6px 0;
     border-bottom: 1px solid var(--border-color);
     overflow: hidden; /* 長いテキストの折り返し */
     text-overflow: ellipsis; /* 長いテキストの省略 */
@@ -374,18 +387,45 @@ body {
 
 .no-service {
     text-align: center;
-    padding: 15px;
+    padding: 12px;
     color: var(--accent-color);
+}
+
+/* もっと表示ボタン - タブ内に配置 */
+.show-more-btn {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+}
+
+.show-more-btn:hover {
+    background-color: #357abd;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+}
+
+.show-more-btn:active {
+    transform: translateY(0);
 }
 
 /* デスクトップ表示での常時表示 */
 @media (min-width: 601px) {
     .upcoming-buses.tab-content {
-        max-height: 400px !important;
+        max-height: 500px !important;
         opacity: 1 !important;
-        padding: 15px !important;
-        margin-top: 20px;
-        overflow: visible;
+        padding: 12px !important;
+        margin-top: 14px;
+        overflow-y: auto; /* スクロール可能にする */
+        overflow-x: hidden; /* 横スクロールを防止 */
     }
     
     .upcoming-buses h3 {
@@ -587,6 +627,13 @@ body {
     .bus-card .time {
         font-size: 24px;
     }
+    
+    /* この範囲でもスクロールを有効化 */
+    .upcoming-buses {
+        max-height: 500px;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
 }
 
 /* タブレットサイズでも一定の見やすさを確保 */
@@ -597,6 +644,9 @@ body {
     
     .upcoming-buses {
         padding: 12px;
+        max-height: 500px; /* 最大高さを設定 */
+        overflow-y: auto; /* スクロール可能にする */
+        overflow-x: hidden; /* 横スクロールを防止 */
     }
 }
 
@@ -634,21 +684,23 @@ body {
 /* クリック可能な日時エリアのスタイル */
 .date-time-info.clickable {
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     border-radius: 8px;
     padding: 5px 10px;
     margin: -5px -10px;
     position: relative;
 }
 
+/* ホバー時に薄く表示 */
 .date-time-info.clickable:hover {
-    background-color: rgba(74, 144, 226, 0.1);
-    transform: scale(1.02);
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
+/* 設定アイコンは削除 */
+
 .date-time-info.manual {
-    background-color: rgba(243, 156, 18, 0.15);
-    border: 2px solid rgba(243, 156, 18, 0.3);
+    background-color: rgba(243, 156, 18, 0.12);
+    border: 1px solid rgba(243, 156, 18, 0.25);
 }
 
 .date-time-info.manual .current-time {
@@ -657,15 +709,6 @@ body {
 
 .date-time-info.manual .current-date {
     color: rgba(255, 215, 0, 0.9);
-}
-
-/* 古いスタイルを削除 */
-.current-time.clickable {
-    cursor: default;
-    transition: none;
-    border-radius: none;
-    padding: 0;
-    margin: 0;
 }
 
 .current-time.clickable:hover {
@@ -714,9 +757,9 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 20px 0 20px;
+    padding: 16px 16px 0 16px;
     border-bottom: 1px solid var(--border-color);
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .modal-header h3 {
@@ -736,14 +779,14 @@ body {
 }
 
 .modal-body {
-    padding: 0 20px 20px 20px;
+    padding: 0 16px 16px 16px;
 }
 
 .time-setter {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    margin-bottom: 20px;
+    gap: 14px;
+    margin-bottom: 16px;
 }
 
 .current-time-display {
@@ -986,6 +1029,19 @@ body {
         min-width: 0;
     }
     
+    /* タップ可能な領域を拡大 */
+    .date-time-info.clickable {
+        padding: 8px 12px;
+        margin: -8px -12px;
+        touch-action: manipulation;
+    }
+    
+    /* アクティブ状態のフィードバック */
+    .date-time-info.clickable:active {
+        background-color: rgba(255, 255, 255, 0.2);
+        transform: scale(0.98);
+    }
+    
     .schedule-status {
         flex: 1;
         min-width: 0;
@@ -1013,4 +1069,494 @@ body {
         min-height: 40px;
         padding: 10px;
     }
+}
+
+/* PWAインストールバナー */
+.install-banner {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #357abd 100%);
+    box-shadow: var(--shadow);
+    border-radius: var(--border-radius);
+    margin: 14px 0;
+    padding: 14px;
+    opacity: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: all 0.4s ease-in-out;
+}
+
+/* 常時表示版のインストールバナー */
+.install-banner-permanent {
+    opacity: 1;
+    max-height: 200px;
+    display: block;
+}
+
+/* インストール済みの場合は非表示 */
+.install-banner.installed {
+    display: none;
+}
+
+.install-banner.show {
+    opacity: 1;
+    max-height: 200px;
+    margin: 14px 0;
+}
+
+.install-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.install-banner-icon img {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+
+.install-banner-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.install-banner-text h3 {
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+}
+
+.install-banner-text p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.install-banner-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-install {
+    background-color: white;
+    color: var(--primary-color);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.btn-install:hover {
+    background-color: rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-install:active {
+    transform: translateY(0);
+}
+
+.btn-dismiss {
+    background-color: transparent;
+    color: white;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.btn-dismiss:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* トースト通知 */
+.toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background-color: var(--card-bg-color);
+    color: var(--text-color);
+    padding: 14px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    z-index: 2000;
+    opacity: 0;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    font-weight: 500;
+    max-width: 90%;
+    text-align: center;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.toast-success {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.toast-error {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.toast-warning {
+    background-color: var(--warning-color);
+    color: white;
+}
+
+.toast-info {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* インストールバナーのレスポンシブ対応 */
+@media (max-width: 768px) {
+    .install-banner {
+        padding: 16px;
+        margin: 16px 0;
+    }
+    
+    .install-banner-content {
+        gap: 12px;
+    }
+    
+    .install-banner-icon img {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .install-banner-text h3 {
+        font-size: 15px;
+    }
+    
+    .install-banner-text p {
+        font-size: 13px;
+    }
+    
+    .btn-install {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .install-banner {
+        padding: 12px;
+        margin: 12px 0;
+    }
+    
+    .install-banner-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .install-banner-icon {
+        margin: 0 auto;
+    }
+    
+    .install-banner-actions {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .btn-install {
+        flex: 1;
+    }
+    
+    .toast {
+        bottom: 80px;
+        font-size: 13px;
+        padding: 12px 20px;
+    }
+}
+
+/* 更新通知バナー */
+.update-notification {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, var(--success-color) 0%, #229954 100%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    z-index: 1001;
+    transform: translateY(-100%);
+    transition: transform 0.3s ease-in-out;
+    padding: 16px;
+}
+
+.update-notification.show {
+    transform: translateY(0);
+}
+
+.update-notification-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.update-notification-text {
+    flex: 1;
+    min-width: 0;
+    color: white;
+}
+
+.update-notification-text strong {
+    font-size: 16px;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.update-notification-text p {
+    font-size: 14px;
+    margin: 0;
+    opacity: 0.9;
+}
+
+.update-notification-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-update {
+    background-color: white;
+    color: var(--success-color);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.btn-update:hover {
+    background-color: rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-update:active {
+    transform: translateY(0);
+}
+
+.btn-dismiss-update {
+    background-color: transparent;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.btn-dismiss-update:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: white;
+}
+
+/* 更新通知のレスポンシブ対応 */
+@media (max-width: 480px) {
+    .update-notification {
+        padding: 12px;
+    }
+    
+    .update-notification-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .update-notification-text strong {
+        font-size: 14px;
+    }
+    
+    .update-notification-text p {
+        font-size: 13px;
+    }
+    
+    .update-notification-actions {
+        width: 100%;
+    }
+    
+    .btn-update,
+    .btn-dismiss-update {
+        flex: 1;
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+}
+
+/* ローディング画面 */
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--background-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.3s ease-out;
+}
+
+.loading-screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loading-content {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+}
+
+.loading-logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(74, 144, 226, 0.3);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 20px rgba(74, 144, 226, 0.3);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 8px 30px rgba(74, 144, 226, 0.5);
+    }
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-text {
+    color: var(--light-text-color);
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0;
+}
+
+/* スムーズスクロール */
+html {
+    scroll-behavior: smooth;
+}
+
+/* フォーカス表示の改善 */
+*:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* タッチデバイス用の改善 */
+@media (hover: none) and (pointer: coarse) {
+    button,
+    .btn,
+    .icon-btn,
+    a {
+        min-height: 44px;
+        min-width: 44px;
+    }
+}
+
+/* ============================================
+   フッター
+   ============================================ */
+
+.site-footer {
+    margin-top: 40px;
+    padding: 20px 0;
+    border-top: 1px solid var(--border-color);
+    color: var(--light-text-color);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.footer-about {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.footer-about h2 {
+    font-size: 18px;
+    color: var(--text-color);
+    margin-bottom: 10px;
+}
+
+.footer-hint {
+    text-align: center;
+    padding: 10px 0;
+    margin-top: 10px;
+    background-color: var(--card-bg-color);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.footer-hint p {
+    font-size: 13px;
+    color: var(--light-text-color);
+    margin: 0;
+}
+
+.footer-copyright {
+    text-align: center;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+    margin-top: 15px;
+}
+
+.footer-copyright p {
+    margin: 0;
 }

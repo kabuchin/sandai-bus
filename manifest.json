@@ -1,6 +1,7 @@
 {
   "name": "産大バス時刻表 - 大阪産業大学スクールバス時刻表",
   "short_name": "産大バス時刻表",
+  "version": "1.1.0",
   "description": "産大バス・大阪産業大学スクールバス時刻表をリアルタイムで確認。住道駅から大阪産業大学へのバス時刻を簡単にチェックできます。",
   "start_url": "/?utm_source=pwa",
   "id": "sandai-bus-timetable",

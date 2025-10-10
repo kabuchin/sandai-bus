@@ -3,6 +3,10 @@ let dayScheduleData;
 const universityDirection = "産業大学前発";
 const stationDirection = "JR住道駅発";
 let upcomingBusCount = 5;
+let upcomingBusCountUniversity = 5; // 産業大学前発用の表示件数
+let upcomingBusCountStation = 5; // JR住道駅発用の表示件数
+const INITIAL_BUS_COUNT = 5; // 初期表示件数
+const INCREMENT_COUNT = 5; // もっと表示ボタンで増やす件数
 
 // 手動設定時刻の管理
 let manualDateTime = null;
@@ -74,20 +78,19 @@ function checkRequiredElements() {
 // 高速初期化関数 - 時刻表表示を最優先
 async function fastInit() {
     try {
-        // 最小限のDOM要素確認
-        const requiredElements = ['currentTime', 'currentDate', 'scheduleType', 'operationStatus'];
-        for (const id of requiredElements) {
-            if (!document.getElementById(id)) {
-                console.warn(`必須要素 ${id} が見つかりません`);
-            }
-        }
+        console.log('アプリ初期化開始');
+        const initStartTime = performance.now();
         
         // JSONデータの並列読み込み（最優先）
-        const dataPromise = loadTimeTableData();
+        await loadTimeTableData();
         
         // 時刻表データ読み込み完了後すぐに表示
-        await dataPromise;
         updateDisplay();
+        
+        // ローディング画面を非表示
+        hideLoadingScreen();
+        
+        console.log(`初期化完了: ${(performance.now() - initStartTime).toFixed(2)}ms`);
         
         // 1分ごとの更新を設定（最適化版）
         setInterval(() => {
@@ -96,31 +99,73 @@ async function fastInit() {
             }
         }, 60 * 1000);
         
-        // 非必須機能を遅延読み込み
-        setTimeout(initSecondaryFeatures, 100);
+        // 非必須機能を遅延読み込み（マイクロタスクで実行）
+        Promise.resolve().then(() => {
+            requestIdleCallback ? 
+                requestIdleCallback(initSecondaryFeatures, { timeout: 2000 }) : 
+                setTimeout(initSecondaryFeatures, 100);
+        });
+        
+        // Service Workerの登録と更新チェック（さらに遅延）
+        Promise.resolve().then(() => {
+            requestIdleCallback ? 
+                requestIdleCallback(setupServiceWorker, { timeout: 3000 }) : 
+                setTimeout(setupServiceWorker, 200);
+        });
         
     } catch (error) {
+        hideLoadingScreen();
         displayError('時刻データの読み込みに失敗しました。ページを再読み込みしてください。', error.message);
+    }
+}
+
+// fastInitはindex.htmlから呼ばれるため、ここでは呼び出さない
+
+// ローディング画面を非表示
+function hideLoadingScreen() {
+    const loadingScreen = document.getElementById('loadingScreen');
+    if (loadingScreen) {
+        loadingScreen.classList.add('hidden');
+        setTimeout(() => {
+            loadingScreen.style.display = 'none';
+        }, 300);
     }
 }
 
 // 時刻表データの読み込み（最優先）
 async function loadTimeTableData() {
-    const [timeResponse, dayResponse] = await Promise.all([
-        fetch('time.json'),
-        fetch('day.json')
-    ]);
-    
-    if (!timeResponse.ok) {
-        throw new Error('time.jsonの取得に失敗しました');
+    try {
+        // 並列フェッチでパフォーマンス向上
+        const [timeResponse, dayResponse] = await Promise.all([
+            fetch('time.json', { 
+                cache: 'default',
+                priority: 'high'
+            }),
+            fetch('day.json', { 
+                cache: 'default',
+                priority: 'high'
+            })
+        ]);
+        
+        if (!timeResponse.ok) {
+            throw new Error(`time.jsonの取得に失敗: ${timeResponse.status}`);
+        }
+        
+        if (!dayResponse.ok) {
+            throw new Error(`day.jsonの取得に失敗: ${dayResponse.status}`);
+        }
+        
+        // JSONパースも並列処理
+        [timeTableData, dayScheduleData] = await Promise.all([
+            timeResponse.json(),
+            dayResponse.json()
+        ]);
+        
+        console.log('時刻表データ読み込み完了');
+    } catch (error) {
+        console.error('データ読み込みエラー:', error);
+        throw error;
     }
-    
-    if (!dayResponse.ok) {
-        throw new Error('day.jsonの取得に失敗しました');
-    }
-    
-    timeTableData = await timeResponse.json();
-    dayScheduleData = await dayResponse.json();
 }
 
 // 非必須機能の遅延初期化
@@ -142,6 +187,9 @@ function initSecondaryFeatures() {
         
         // メニュー機能の設定（QRCode依存）
         setupMenuModal();
+        
+        // PWAインストール機能の設定
+        setupPWAInstall();
         
         console.log('二次機能の初期化完了');
     } catch (error) {
@@ -210,14 +258,15 @@ function getApplicableSchedule(date) {
 }
 
 // 次と次々のバスを取得
-function getNextBuses(direction, hour, minute) {
+function getNextBuses(direction, hour, minute, displayCount = upcomingBusCount) {
     const currentDate = getCurrentDateTime();
     const applicableSchedule = getApplicableSchedule(currentDate);
     if (!applicableSchedule.isOperating) {
         return {
             next: null,
             afterNext: null,
-            upcomingBuses: []
+            upcomingBuses: [],
+            totalAvailable: 0
         };
     }
     
@@ -227,7 +276,8 @@ function getNextBuses(direction, hour, minute) {
         return {
             next: null,
             afterNext: null,
-            upcomingBuses: []
+            upcomingBuses: [],
+            totalAvailable: 0
         };
     }
     
@@ -257,17 +307,20 @@ function getNextBuses(direction, hour, minute) {
                         minute: m, 
                         isNextDay: true 
                     });
-                    if (upcomingBuses.length >= upcomingBusCount + 2) break;
+                    if (upcomingBuses.length >= displayCount + 2) break;
                 }
             }
-            if (upcomingBuses.length >= upcomingBusCount + 2) break;
+            if (upcomingBuses.length >= displayCount + 2) break;
         }
     }
+    
+    const totalAvailable = upcomingBuses.length - 2; // 次と次々のバスを除いた残り
     
     return {
         next: upcomingBuses[0] || null,
         afterNext: upcomingBuses[1] || null,
-        upcomingBuses: upcomingBuses.slice(2, upcomingBusCount + 2)
+        upcomingBuses: upcomingBuses.slice(2, displayCount + 2),
+        totalAvailable: totalAvailable
     };
 }
 
@@ -301,14 +354,17 @@ function formatTime(hour, minute) {
 // 日付をフォーマット
 function formatDate(date) {
     const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
-    return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日(${dayNames[date.getDay()]})`;
+    return `${date.getMonth() + 1}月${date.getDate()}日(${dayNames[date.getDay()]})`;
 }
 
 // 特定の方向のバス情報を更新
 function updateDirectionDisplay(direction, directionSuffix, hour, minute, applicableSchedule) {
     try {
+        // 表示件数を取得
+        const displayCount = directionSuffix === 'university' ? upcomingBusCountUniversity : upcomingBusCountStation;
+        
         // 次と次々のバスを取得
-        const { next, afterNext, upcomingBuses } = getNextBuses(direction, hour, minute);
+        const { next, afterNext, upcomingBuses, totalAvailable } = getNextBuses(direction, hour, minute, displayCount);
         
         // 次のバス表示
         if (next) {
@@ -330,6 +386,7 @@ function updateDirectionDisplay(direction, directionSuffix, hour, minute, applic
         
         // 今後のバス時刻リスト表示
         const upcomingBusListEl = document.getElementById(`upcomingBusList-${directionSuffix}`);
+        
         if (upcomingBusListEl) {
             if (upcomingBuses.length > 0) {
                 let html = '<h3>今後の発車時刻</h3><ul class="bus-list">';
@@ -342,7 +399,32 @@ function updateDirectionDisplay(direction, directionSuffix, hour, minute, applic
                     `;
                 });
                 html += '</ul>';
+                
+                // もっと表示ボタンをタブ内に追加
+                if (totalAvailable > displayCount) {
+                    const remaining = totalAvailable - displayCount;
+                    let buttonText = 'もっと表示';
+                    // 残りが10件未満の場合のみ件数を表示
+                    if (remaining < 10) {
+                        buttonText = `もっと表示 (残り${remaining}件)`;
+                    }
+                    html += `<button class="show-more-btn" id="showMoreBtn-${directionSuffix}">${buttonText}</button>`;
+                }
+                
                 upcomingBusListEl.innerHTML = html;
+                
+                // ボタンのイベントリスナーを再設定
+                const showMoreBtn = document.getElementById(`showMoreBtn-${directionSuffix}`);
+                if (showMoreBtn) {
+                    showMoreBtn.addEventListener('click', () => {
+                        if (directionSuffix === 'university') {
+                            upcomingBusCountUniversity += INCREMENT_COUNT;
+                        } else {
+                            upcomingBusCountStation += INCREMENT_COUNT;
+                        }
+                        updateDisplay();
+                    });
+                }
             } else {
                 upcomingBusListEl.innerHTML = '<h3>今後の発車時刻</h3><div class="no-service">この後の便はありません</div>';
             }
@@ -369,8 +451,8 @@ function updateDisplay() {
         const minute = now.getMinutes();
         const currentMinute = hour * 60 + minute;
         
-        // 分が変わった場合のみ時刻表示を更新
-        if (lastUpdateMinute !== currentMinute) {
+        // 手動時刻設定時、または分が変わった場合に時刻表示を更新
+        if (useManualTime || lastUpdateMinute !== currentMinute) {
             setElementText('currentTime', formatTime(hour, minute));
             setElementText('currentDate', formatDate(now));
             updateDateTimeDisplay();
@@ -583,9 +665,12 @@ function setupTimeModal() {
         useCurrentTimeBtn.addEventListener('click', () => {
             useManualTime = false;
             manualDateTime = null;
+            lastUpdateMinute = -1; // キャッシュをリセット
+            lastScheduleType = ''; // スケジュールタイプもリセット
             updateDateTimeDisplay();
             updateModalDisplay();
             updateDisplay();
+            closeModalFn(); // モーダルを閉じる
         });
         
         // 時刻設定ボタン
@@ -602,6 +687,8 @@ function setupTimeModal() {
             
             useManualTime = true;
             manualDateTime = validation.dateTime.getTime();
+            lastUpdateMinute = -1; // キャッシュをリセット
+            lastScheduleType = ''; // スケジュールタイプもリセット
             updateDateTimeDisplay();
             closeModalFn();
             updateDisplay();
@@ -714,24 +801,7 @@ function waitForQRCode() {
     });
 }
 
-function domReadyInit() {
-    try {
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                // 時刻表を即座に初期化
-                fastInit();
-            });
-        } else {
-            // DOMが既にロード済みの場合、即座に実行
-            fastInit();
-        }
-    } catch (error) {
-        displayError('アプリケーション初期化中にエラーが発生しました', error.message);
-    }
-}
-
-// スクリプト読み込み時に初期化を開始
-domReadyInit();
+// domReadyInit関数は削除（index.htmlから直接fastInitが呼ばれる）
 
 // Service Worker の登録
 if ('serviceWorker' in navigator) {
@@ -782,6 +852,8 @@ function setupMenuModal() {
             themeToggle.addEventListener('click', () => {
                 ThemeManager.toggleTheme();
             });
+            // ボタンの表示を初期化
+            ThemeManager.updateThemeButton();
         }
         
         // Web Share API対応チェック
@@ -1054,18 +1126,15 @@ function showToast(message) {
 
 // テーマ管理関数
 const ThemeManager = {
+    currentTheme: 'auto', // デフォルト値を設定
+    
     // テーマ設定をローカルストレージから読み取り
     init() {
-        const savedTheme = localStorage.getItem('theme');
+        const savedTheme = localStorage.getItem('theme') || 'auto';
+        this.currentTheme = savedTheme; // currentThemeを先に設定
+        this.setTheme(savedTheme);
         
-        if (savedTheme) {
-            this.setTheme(savedTheme);
-        } else {
-            // 初回訪問時はシステム設定に従う
-            this.setTheme('auto');
-        }
-        
-        this.updateThemeButton();
+        // updateThemeButtonは後で呼ばれる（setupMenuModal内）
     },
     
     // テーマを設定
@@ -1114,7 +1183,9 @@ const ThemeManager = {
         const themeText = document.getElementById('themeText');
         const themeIcon = themeButton?.querySelector('.theme-icon');
         
-        if (!themeButton || !themeText || !themeIcon) return;
+        if (!themeButton || !themeText || !themeIcon) {
+            return;
+        }
         
         const currentTheme = this.currentTheme || 'auto';
         
@@ -1139,5 +1210,168 @@ const ThemeManager = {
     }
 };
 
+// PWAインストール機能
+let deferredPrompt = null;
+
+function setupPWAInstall() {
+    const installBanner = document.getElementById('installBanner');
+    const installButton = document.getElementById('installButton');
+    
+    // 既にインストール済みかチェック
+    if (window.matchMedia('(display-mode: standalone)').matches || 
+        window.navigator.standalone === true ||
+        localStorage.getItem('pwa-installed') === 'true') {
+        console.log('既にPWAとしてインストール済みです');
+        if (installBanner) {
+            installBanner.classList.add('installed');
+        }
+        return;
+    }
+    
+    // beforeinstallpromptイベントをキャプチャ
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // デフォルトのインストールプロンプトを防ぐ
+        e.preventDefault();
+        deferredPrompt = e;
+        console.log('インストールプロンプトが利用可能です');
+    });
+    
+    // インストールボタンのクリックイベント
+    if (installButton) {
+        installButton.addEventListener('click', async () => {
+            if (!deferredPrompt) {
+                // iOSの場合のヘルプメッセージ
+                if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                    showIOSInstallGuide();
+                } else {
+                    showToast('インストールは現在利用できません。ブラウザの設定からインストールしてください。', 'info');
+                }
+                return;
+            }
+            
+            // インストールプロンプトを表示
+            deferredPrompt.prompt();
+            
+            // ユーザーの選択を待つ
+            const { outcome } = await deferredPrompt.userChoice;
+            
+            if (outcome === 'accepted') {
+                console.log('ユーザーがPWAのインストールを承認しました');
+                showToast('アプリをインストール中...', 'success');
+            } else {
+                console.log('ユーザーがPWAのインストールを拒否しました');
+            }
+            
+            // プロンプトは一度しか使えない
+            deferredPrompt = null;
+        });
+    }
+    
+    // インストール成功時のイベント
+    window.addEventListener('appinstalled', () => {
+        console.log('PWAが正常にインストールされました');
+        if (installBanner) {
+            installBanner.classList.add('installed');
+        }
+        showToast('アプリをインストールしました！', 'success');
+        
+        // インストール済みフラグを保存
+        localStorage.setItem('pwa-installed', 'true');
+    });
+}
+
+function showIOSInstallGuide() {
+    showToast('Safari の共有ボタンから「ホーム画面に追加」を選択してください', 'info');
+}
+
+// トースト通知を表示（既存のshowToast関数がない場合）
+function showToast(message, type = 'info') {
+    // 既存のトースト要素を削除
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    // トースト要素を作成
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'polite');
+    
+    // bodyに追加
+    document.body.appendChild(toast);
+    
+    // フェードイン
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 100);
+    
+    // 3秒後にフェードアウト
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            toast.remove();
+        }, 300);
+    }, 3000);
+}
+
+// Service Workerの登録と更新通知
+function setupServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+                console.log('Service Worker登録成功:', registration.scope);
+                
+                // 更新チェック
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    console.log('新しいService Workerが見つかりました');
+                    
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // 新しいバージョンが利用可能 - 自動更新
+                            console.log('新しいバージョンを自動適用します');
+                            newWorker.postMessage({ type: 'SKIP_WAITING' });
+                        }
+                    });
+                });
+                
+                // 定期的に更新チェック（1時間ごと）
+                setInterval(() => {
+                    registration.update();
+                }, 60 * 60 * 1000);
+            })
+            .catch((error) => {
+                console.error('Service Worker登録失敗:', error);
+            });
+        
+        // Service Workerからのメッセージを受信
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'SW_UPDATED') {
+                console.log('Service Workerが更新されました:', event.data.version);
+                // 自動リロード
+                window.location.reload();
+            }
+        });
+        
+        // コントローラーの変更を監視（新しいSWがアクティブになった時）
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            console.log('Service Workerが更新されました。ページをリロードします。');
+            window.location.reload();
+        });
+        
+        // オンライン/オフライン状態の監視
+        window.addEventListener('online', () => {
+            showToast('オンラインに戻りました', 'success');
+        });
+        
+        window.addEventListener('offline', () => {
+            showToast('オフラインモードです', 'warning');
+        });
+    }
+}
+
 // 初期化時にテーマを適用
 ThemeManager.init();
+
