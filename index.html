@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light dark">
     <meta name="format-detection" content="telephone=no">
     <meta name="mobile-web-app-capable" content="yes">
@@ -82,7 +82,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     
     <!-- QRコードライブラリ（遅延読み込み） -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js" async defer></script>
     
     <!-- 構造化データ（JSON-LD） -->
     <script type="application/ld+json">
@@ -214,129 +214,6 @@
         ]
     }
     </script>
-    <style>
-        /* Critical CSS - Above the fold */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Noto Sans JP', sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            line-height: 1.6;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .status-header {
-            background: var(--header-gradient);
-            color: white;
-            padding: 15px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        
-        .current-time {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 5px;
-            color: white;
-        }
-        
-        .current-date {
-            font-size: 16px;
-            opacity: 0.9;
-            color: rgba(255, 255, 255, 0.9);
-        }
-        
-        .bus-directions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-        
-        .direction-container {
-            background: var(--card-bg-color);
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: var(--shadow);
-            transition: transform 0.3s ease;
-        }
-        
-        .direction-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--text-color);
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
-        .bus-cards {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .bus-card {
-            background: var(--card-gradient);
-            color: white;
-            padding: 10px;
-            border-radius: 12px;
-            text-align: center;
-        }
-        
-        .bus-card .time {
-            font-size: 24px;
-            font-weight: 700;
-            margin: 10px 0;
-        }
-        
-        .error-message {
-            text-align: center;
-            padding: 30px;
-            margin: 20px auto;
-            max-width: 600px;
-            background-color: var(--card-bg-color);
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            color: var(--danger-color);
-            border: 2px solid var(--danger-color);
-        }
-        .error-message h2 {
-            margin-bottom: 15px;
-            color: var(--danger-color);
-        }
-        .error-message button {
-            padding: 10px 20px;
-            margin-top: 15px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-        .error-message button:hover {
-            background-color: var(--primary-color);
-            filter: brightness(0.9);
-            transform: translateY(-1px);
-        }
-    </style>
 </head>
 <body>
     <!-- ローディング画面 -->
@@ -431,6 +308,7 @@
                 </div>
                 <div class="install-banner-actions">
                     <button id="installButton" class="btn-install">インストール</button>
+                    <button id="dismissInstallBanner" class="btn-dismiss" aria-label="インストール案内を閉じる" title="閉じる">&times;</button>
                 </div>
             </div>
         </div>
@@ -503,23 +381,20 @@
                     </div>
                     <div class="menu-section">
                         <h4>リンク</h4>
-                        <a href="https://kabuchin.f5.si" target="_blank" class="menu-link-btn">
+                        <a href="https://kabuchin.f5.si" target="_blank" rel="noopener noreferrer" class="menu-link-btn">
                             トップページ
                         </a>
-                        <a href="https://github.com/kabuchin" target="_blank" class="menu-link-btn">
+                        <a href="https://github.com/kabuchin" target="_blank" rel="noopener noreferrer" class="menu-link-btn">
                             GitHub
                         </a>
                     </div>
                     <div class="menu-section">
                         <h4>ツール</h4>
-                        <a href="https://picon.f5.si/" target="_blank" class="menu-link-btn">
+                        <a href="https://picon.f5.si/" target="_blank" rel="noopener noreferrer" class="menu-link-btn">
                             画像フォーマット変換
                         </a>
-                        <a href="https://img2pdf.f5.si/" target="_blank" class="menu-link-btn">
+                        <a href="https://img2pdf.f5.si/" target="_blank" rel="noopener noreferrer" class="menu-link-btn">
                             画像からPDFに変換
-                        </a>
-                        <a href="https://sandai-bus.f5.si" target="_blank" class="menu-link-btn">
-                            産大バスの時刻表
                         </a>
                     </div>
                     <div class="menu-section">

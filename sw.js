@@ -1,10 +1,10 @@
 // ============================================
 // Service Worker - キャッシュ戦略とオフライン対応
-// Version: 1.1.0
+// Version: 1.1.1
 // ============================================
 
 // キャッシュバージョン管理
-const CACHE_VERSION = '1.1.0';
+const CACHE_VERSION = '1.1.1';
 const STATIC_CACHE = `sandai-bus-static-v${CACHE_VERSION}`;
 const DATA_CACHE = `sandai-bus-data-v${CACHE_VERSION}`;
 
@@ -58,29 +58,15 @@ const clearOldCaches = (currentCaches) => {
   });
 };
 
-/**
- * 全クライアントに更新通知を送信
- * @param {string} version - バージョン情報
- * @returns {Promise}
- */
-const notifyClients = (version) => {
-  return self.clients.matchAll().then((clients) => {
-    clients.forEach((client) => {
-      client.postMessage({
-        type: 'SW_UPDATED',
-        version
-      });
-    });
-  });
-};
-
 // ============================================
 // イベントリスナー: インストール
 // ============================================
 
+// 注: skipWaiting()はここでは呼ばない。
+// ページ側からのSKIP_WAITINGメッセージ受信時のみ適用する（意図しない更新適用を防ぐ）
 self.addEventListener('install', (event) => {
   console.log('Service Worker: インストール中...', CACHE_VERSION);
-  
+
   event.waitUntil(
     Promise.all([
       cacheAssets(STATIC_CACHE, STATIC_ASSETS),
@@ -88,7 +74,6 @@ self.addEventListener('install', (event) => {
     ])
     .then(() => {
       console.log('Service Worker: インストール完了');
-      return self.skipWaiting();
     })
     .catch((error) => {
       console.error('Service Worker: キャッシュエラー', error);
@@ -109,24 +94,23 @@ self.addEventListener('activate', (event) => {
     clearOldCaches(currentCaches)
       .then(() => {
         console.log('Service Worker: アクティベート完了');
-        return notifyClients(CACHE_VERSION);
+        return self.clients.claim();
       })
-      .then(() => self.clients.claim())
   );
 });
 
 // ============================================
-// キャッシュ戦略: Stale-While-Revalidate (JSON)
+// キャッシュ戦略: Stale-While-Revalidate (JSON / CSS / JS)
 // ============================================
 
 /**
- * JSONファイル用のキャッシュ戦略
  * キャッシュから即座にレスポンスし、バックグラウンドで更新
  * @param {Request} request
+ * @param {string} cacheName - 使用するキャッシュ名（DATA_CACHE または STATIC_CACHE）
  * @returns {Promise<Response>}
  */
-const staleWhileRevalidate = async (request) => {
-  const cache = await caches.open(DATA_CACHE);
+const staleWhileRevalidate = async (request, cacheName) => {
+  const cache = await caches.open(cacheName);
   const cachedResponse = await cache.match(request);
   
   // バックグラウンドでキャッシュを更新
@@ -137,8 +121,15 @@ const staleWhileRevalidate = async (request) => {
       }
       return response;
     })
-    .catch(() => cachedResponse);
-  
+    .catch((error) => {
+      // キャッシュがあればそれを返す。無ければundefinedではなくエラーを伝播させる
+      // （respondWith(undefined)によるTypeErrorを防ぐ）
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      throw error;
+    });
+
   // キャッシュがあれば即座に返し、なければフェッチを待つ
   return cachedResponse || fetchPromise;
 };
@@ -172,7 +163,10 @@ const cacheFirst = async (request) => {
   } catch (error) {
     // オフライン時、ナビゲーションリクエストはindex.htmlを返す
     if (request.mode === 'navigate') {
-      return caches.match('/index.html');
+      const fallback = await caches.match('/index.html');
+      if (fallback) {
+        return fallback;
+      }
     }
     throw error;
   }
@@ -191,11 +185,44 @@ const cacheFirst = async (request) => {
 const networkFirst = async (request) => {
   try {
     const response = await fetch(request);
-    const cache = await caches.open(STATIC_CACHE);
-    cache.put(request, response.clone());
+    if (response.ok) {
+      const cache = await caches.open(STATIC_CACHE);
+      cache.put(request, response.clone());
+    }
     return response;
   } catch (error) {
     return caches.match(request);
+  }
+};
+
+// ============================================
+// キャッシュ戦略: Network-First (ナビゲーション)
+// ============================================
+
+/**
+ * ナビゲーションリクエスト用のキャッシュ戦略
+ * ネットワーク優先。失敗時はキャッシュ、それも無ければindex.htmlにフォールバック
+ * @param {Request} request
+ * @returns {Promise<Response>}
+ */
+const networkFirstNavigate = async (request) => {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(STATIC_CACHE);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cached = await caches.match(request);
+    if (cached) {
+      return cached;
+    }
+    const fallback = await caches.match('/index.html');
+    if (fallback) {
+      return fallback;
+    }
+    throw error;
   }
 };
 
@@ -223,17 +250,40 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   
-  // リロード（Shift+F5など）の場合は常にネットワークから取得
+  // リロード（Shift+F5など）の場合はネットワーク優先。
+  // ただしオフライン時はキャッシュにフォールバックする（真っ白画面を防ぐ）
   if (request.cache === 'reload') {
-    event.respondWith(fetch(request));
+    event.respondWith(
+      fetch(request).catch(async (error) => {
+        const cached = await caches.match(request);
+        if (cached) {
+          return cached;
+        }
+        if (request.mode === 'navigate') {
+          const fallback = await caches.match('/index.html');
+          if (fallback) {
+            return fallback;
+          }
+        }
+        throw error;
+      })
+    );
     return;
   }
   
-  // JSONファイル: Stale-While-Revalidate戦略
-  if (url.pathname.endsWith('.json')) {
-    event.respondWith(staleWhileRevalidate(request));
+  // ナビゲーションリクエスト: Network-First戦略
+  if (request.mode === 'navigate') {
+    event.respondWith(networkFirstNavigate(request));
   }
-  // 静的ファイル: Cache-First戦略
+  // JSONファイル: Stale-While-Revalidate戦略（DATA_CACHE）
+  else if (url.pathname.endsWith('.json')) {
+    event.respondWith(staleWhileRevalidate(request, DATA_CACHE));
+  }
+  // CSS/JSファイル: Stale-While-Revalidate戦略（STATIC_CACHE）
+  else if (url.pathname.endsWith('.css') || url.pathname.endsWith('.js')) {
+    event.respondWith(staleWhileRevalidate(request, STATIC_CACHE));
+  }
+  // その他の静的ファイル: Cache-First戦略
   else if (isStaticAsset(url.pathname)) {
     event.respondWith(cacheFirst(request));
   }

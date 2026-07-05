@@ -16,22 +16,19 @@
   "icons": [
     {
       "src": "bot_bus.webp",
-      "sizes": "any",
+      "sizes": "1024x1024",
       "type": "image/webp",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "bot_bus.webp",
+      "sizes": "1024x1024",
+      "type": "image/webp",
+      "purpose": "maskable"
     }
   ],
   "categories": ["education", "transportation", "utilities", "productivity"],
   "keywords": ["産大バス", "大阪産業大学", "バス", "時刻表", "住道駅", "スクールバス", "リアルタイム"],
-  "screenshots": [
-    {
-      "src": "bot_bus.webp",
-      "sizes": "1280x720",
-      "type": "image/webp",
-      "form_factor": "wide",
-      "label": "産大バス時刻表のメイン画面"
-    }
-  ],
   "shortcuts": [
     {
       "name": "住道駅発",

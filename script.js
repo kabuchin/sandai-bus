@@ -33,87 +33,126 @@ function setElementText(id, text) {
 // エラー表示関数
 function displayError(message, details) {
     console.error(`${message}: ${details}`);
-    
-    const errorContainer = document.getElementById('error-container');
-    if (errorContainer) {
-        errorContainer.innerHTML = `
-            <div class="error-message">
-                <h2>エラーが発生しました</h2>
-                <p>${message}</p>
-                <p>エラー詳細: ${details}</p>
-                <button onclick="window.location.reload()">再読み込み</button>
-            </div>
-        `;
-    } else {
-        document.body.innerHTML = `
-            <div class="error-message" style="text-align: center; padding: 20px; margin: 20px; background-color: #ffdddd; border-radius: 10px;">
-                <h2>エラーが発生しました</h2>
-                <p>${message}</p>
-                <p>エラー詳細: ${details}</p>
-                <button onclick="window.location.reload()" style="padding: 10px 20px; margin-top: 10px; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">再読み込み</button>
-            </div>
-        `;
-    }
-}
 
-// 必須DOM要素が存在するか確認する関数
-function checkRequiredElements() {
-    const requiredIds = [
-        'currentTime', 'currentDate', 'scheduleType', 'operationStatus',
-        'nextBusTime-university', 'nextBusRemaining-university', 'afterNextBusTime-university', 'afterNextBusRemaining-university',
-        'nextBusTime-station', 'nextBusRemaining-station', 'afterNextBusTime-station', 'afterNextBusRemaining-station',
-        'upcomingBusList-university', 'upcomingBusList-station'
-    ];
-    
-    const missingElements = requiredIds.filter(id => !document.getElementById(id));
-    
-    if (missingElements.length > 0) {
-        throw new Error(`必要な要素が見つかりません: ${missingElements.join(', ')}`);
+    const errorContainer = document.getElementById('error-container');
+
+    const heading = document.createElement('h2');
+    heading.textContent = 'エラーが発生しました';
+
+    const messageEl = document.createElement('p');
+    messageEl.textContent = message;
+
+    const detailsEl = document.createElement('p');
+    detailsEl.textContent = `エラー詳細: ${details}`;
+
+    const reloadButton = document.createElement('button');
+    reloadButton.textContent = '再読み込み';
+    reloadButton.addEventListener('click', () => window.location.reload());
+
+    if (errorContainer) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'error-message';
+        wrapper.appendChild(heading);
+        wrapper.appendChild(messageEl);
+        wrapper.appendChild(detailsEl);
+        wrapper.appendChild(reloadButton);
+
+        errorContainer.innerHTML = '';
+        errorContainer.appendChild(wrapper);
+    } else {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'error-message';
+        wrapper.style.textAlign = 'center';
+        wrapper.style.padding = '20px';
+        wrapper.style.margin = '20px';
+        wrapper.style.backgroundColor = '#ffdddd';
+        wrapper.style.borderRadius = '10px';
+
+        reloadButton.style.padding = '10px 20px';
+        reloadButton.style.marginTop = '10px';
+        reloadButton.style.backgroundColor = '#3498db';
+        reloadButton.style.color = 'white';
+        reloadButton.style.border = 'none';
+        reloadButton.style.borderRadius = '5px';
+        reloadButton.style.cursor = 'pointer';
+
+        wrapper.appendChild(heading);
+        wrapper.appendChild(messageEl);
+        wrapper.appendChild(detailsEl);
+        wrapper.appendChild(reloadButton);
+
+        document.body.innerHTML = '';
+        document.body.appendChild(wrapper);
     }
-    
-    return true;
 }
 
 // 初期化関数
 // 高速初期化関数 - 時刻表表示を最優先
 async function fastInit() {
+    // 読み込みが長時間かかる場合のフェイルセーフ
+    let loadingSettled = false;
+    const loadingTimeoutId = setTimeout(() => {
+        if (loadingSettled) return;
+        loadingSettled = true;
+        hideLoadingScreen();
+        displayError('読み込みがタイムアウトしました。通信環境を確認してページを再読み込みしてください。', 'timeout');
+    }, 15 * 1000);
+
     try {
         console.log('アプリ初期化開始');
         const initStartTime = performance.now();
-        
+
         // JSONデータの並列読み込み（最優先）
         await loadTimeTableData();
-        
+
+        if (loadingSettled) {
+            // タイムアウト後に遅れて成功した場合は二重描画しない
+            return;
+        }
+        loadingSettled = true;
+        clearTimeout(loadingTimeoutId);
+
         // 時刻表データ読み込み完了後すぐに表示
         updateDisplay();
-        
+
         // ローディング画面を非表示
         hideLoadingScreen();
-        
+
         console.log(`初期化完了: ${(performance.now() - initStartTime).toFixed(2)}ms`);
-        
-        // 1分ごとの更新を設定（最適化版）
-        setInterval(() => {
+
+        // 分境界に揃えてから1分ごとの更新を設定（最適化版）
+        const now = getCurrentDateTime();
+        const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+        setTimeout(() => {
             if (!useManualTime) {
                 optimizedUpdateDisplay();
             }
-        }, 60 * 1000);
-        
+            setInterval(() => {
+                if (!useManualTime) {
+                    optimizedUpdateDisplay();
+                }
+            }, 60 * 1000);
+        }, msUntilNextMinute);
+
         // 非必須機能を遅延読み込み（マイクロタスクで実行）
+        // 注: requestIdleCallback未対応ブラウザではベタ参照がReferenceErrorになるためtypeofで判定
         Promise.resolve().then(() => {
-            requestIdleCallback ? 
-                requestIdleCallback(initSecondaryFeatures, { timeout: 2000 }) : 
+            typeof requestIdleCallback === 'function' ?
+                requestIdleCallback(initSecondaryFeatures, { timeout: 2000 }) :
                 setTimeout(initSecondaryFeatures, 100);
         });
-        
+
         // Service Workerの登録と更新チェック（さらに遅延）
         Promise.resolve().then(() => {
-            requestIdleCallback ? 
-                requestIdleCallback(setupServiceWorker, { timeout: 3000 }) : 
+            typeof requestIdleCallback === 'function' ?
+                requestIdleCallback(setupServiceWorker, { timeout: 3000 }) :
                 setTimeout(setupServiceWorker, 200);
         });
-        
+
     } catch (error) {
+        if (loadingSettled) return;
+        loadingSettled = true;
+        clearTimeout(loadingTimeoutId);
         hideLoadingScreen();
         displayError('時刻データの読み込みに失敗しました。ページを再読み込みしてください。', error.message);
     }
@@ -171,9 +210,6 @@ async function loadTimeTableData() {
 // 非必須機能の遅延初期化
 function initSecondaryFeatures() {
     try {
-        // テーママネージャーを初期化
-        ThemeManager.init();
-        
         // QRCode.jsの確認
         if (typeof QRCode === 'undefined') {
             console.warn('QRCode.jsが読み込まれていません。QRコード機能は利用できません。');
@@ -190,16 +226,46 @@ function initSecondaryFeatures() {
         
         // PWAインストール機能の設定
         setupPWAInstall();
-        
+
+        // モーダルのフォーカストラップ
+        setupModalFocusTrap();
+
         console.log('二次機能の初期化完了');
     } catch (error) {
         console.warn('二次機能の初期化中にエラーが発生しました:', error);
     }
 }
 
-async function init() {
-    // 後方互換性のため、fastInitを呼び出し
-    return fastInit();
+// 表示中のモーダル内でTabキーによるフォーカスを循環させる
+function setupModalFocusTrap() {
+    const FOCUSABLE_SELECTOR = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Tab') return;
+
+        const openModal = document.querySelector('.modal.show');
+        if (!openModal) return;
+
+        const focusableElements = Array.from(openModal.querySelectorAll(FOCUSABLE_SELECTOR))
+            .filter(el => el.offsetParent !== null);
+
+        if (focusableElements.length === 0) return;
+
+        const firstEl = focusableElements[0];
+        const lastEl = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+            if (document.activeElement === firstEl) {
+                e.preventDefault();
+                lastEl.focus();
+            }
+        } else {
+            if (document.activeElement === lastEl) {
+                e.preventDefault();
+                firstEl.focus();
+            }
+        }
+    });
 }
 
 // 現在の日付に基づいて適用すべき時刻表を取得
@@ -224,7 +290,7 @@ function getApplicableSchedule(date) {
     const freeRideDates = schedule_summary.free_ride.dates[year] || [];
     if (freeRideDates.includes(dateString)) {
         scheduleInfo.type = schedule_summary.free_ride.description;
-        scheduleInfo.timetableId = "1-A";  // 平日臨時増便ダイヤを使用
+        scheduleInfo.timetableId = "1-B";  // 臨時増便ダイヤを使用
         return scheduleInfo;
     }
     
@@ -250,10 +316,22 @@ function getApplicableSchedule(date) {
         scheduleInfo.timetableId = "2";
         return scheduleInfo;
     }
-    
+
+    // 平日特別ダイヤ期間のチェック（4/2〜5/1・9/24〜10/2 など、day.jsonで年別に定義）
+    const specialWeekday = schedule_summary.weekday_special_schedule;
+    const specialRanges = (specialWeekday && specialWeekday.ranges && specialWeekday.ranges[year]) || [];
+    const isSpecialWeekday = specialRanges.some(
+        (range) => range.start <= dateString && dateString <= range.end
+    );
+    if (isSpecialWeekday) {
+        scheduleInfo.type = specialWeekday.description || "平日特別ダイヤ";
+        scheduleInfo.timetableId = specialWeekday.timetable_id || "1-B";
+        return scheduleInfo;
+    }
+
     // デフォルトは平日
     scheduleInfo.type = "平日ダイヤ";
-    scheduleInfo.timetableId = "1-B";
+    scheduleInfo.timetableId = "1-A";
     return scheduleInfo;
 }
 
@@ -324,6 +402,32 @@ function getNextBuses(direction, hour, minute, displayCount = upcomingBusCount) 
     };
 }
 
+// 翌日の始発バスを取得（本日の運行が終了した場合の案内用）
+function getTomorrowFirstBus(direction) {
+    const tomorrow = new Date(getCurrentDateTime());
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const applicableSchedule = getApplicableSchedule(tomorrow);
+    if (!applicableSchedule.isOperating) {
+        return null;
+    }
+
+    const timetable = timeTableData.timetables.find(t => t.id === applicableSchedule.timetableId);
+    if (!timetable || !timetable.schedule[direction]) {
+        return null;
+    }
+
+    const scheduleForDirection = timetable.schedule[direction];
+    for (let h = 0; h <= 23; h++) {
+        const minutesForHour = scheduleForDirection[h];
+        if (minutesForHour && minutesForHour.length > 0) {
+            return { hour: h, minute: minutesForHour[0], scheduleType: applicableSchedule.type };
+        }
+    }
+
+    return null;
+}
+
 // 残り時間を計算
 function calculateRemainingTime(hour, minute, isNextDay = false) {
     const now = getCurrentDateTime();
@@ -357,6 +461,14 @@ function formatDate(date) {
     return `${date.getMonth() + 1}月${date.getDate()}日(${dayNames[date.getDay()]})`;
 }
 
+// input[type="date"]用にローカル日付をフォーマット（toISOStringはUTC基準のため使わない）
+function formatDateForInput(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 // 特定の方向のバス情報を更新
 function updateDirectionDisplay(direction, directionSuffix, hour, minute, applicableSchedule) {
     try {
@@ -386,8 +498,11 @@ function updateDirectionDisplay(direction, directionSuffix, hour, minute, applic
         
         // 今後のバス時刻リスト表示
         const upcomingBusListEl = document.getElementById(`upcomingBusList-${directionSuffix}`);
-        
+
         if (upcomingBusListEl) {
+            // 書き換え前にスクロール位置を保存し、後で復元する
+            const previousScrollTop = upcomingBusListEl.scrollTop;
+
             if (upcomingBuses.length > 0) {
                 let html = '<h3>今後の発車時刻</h3><ul class="bus-list">';
                 upcomingBuses.forEach(bus => {
@@ -399,7 +514,7 @@ function updateDirectionDisplay(direction, directionSuffix, hour, minute, applic
                     `;
                 });
                 html += '</ul>';
-                
+
                 // もっと表示ボタンをタブ内に追加
                 if (totalAvailable > displayCount) {
                     const remaining = totalAvailable - displayCount;
@@ -410,9 +525,9 @@ function updateDirectionDisplay(direction, directionSuffix, hour, minute, applic
                     }
                     html += `<button class="show-more-btn" id="showMoreBtn-${directionSuffix}">${buttonText}</button>`;
                 }
-                
+
                 upcomingBusListEl.innerHTML = html;
-                
+
                 // ボタンのイベントリスナーを再設定
                 const showMoreBtn = document.getElementById(`showMoreBtn-${directionSuffix}`);
                 if (showMoreBtn) {
@@ -425,12 +540,29 @@ function updateDirectionDisplay(direction, directionSuffix, hour, minute, applic
                         updateDisplay();
                     });
                 }
+            } else if (next === null) {
+                // 本日の残り便が無い場合は終バス案内＋翌日の始発情報を表示
+                let html = '<h3>今後の発車時刻</h3><div class="no-service">本日の運行は終了しました</div>';
+                const tomorrowFirstBus = getTomorrowFirstBus(direction);
+                if (tomorrowFirstBus) {
+                    html += `<div class="next-day-info">明日の始発: ${formatTime(tomorrowFirstBus.hour, tomorrowFirstBus.minute)}</div>`;
+                } else {
+                    html += '<div class="next-day-info">明日は運休日です</div>';
+                }
+                upcomingBusListEl.innerHTML = html;
             } else {
                 upcomingBusListEl.innerHTML = '<h3>今後の発車時刻</h3><div class="no-service">この後の便はありません</div>';
             }
+
+            // スクロール位置を復元
+            upcomingBusListEl.scrollTop = previousScrollTop;
         }
+
+        // 本日の残り便があるかどうかを返す
+        return next !== null;
     } catch (error) {
         console.error(`${direction}のバス情報更新中にエラーが発生しました:`, error);
+        return true;
     }
 }
 
@@ -471,8 +603,9 @@ function updateDisplay() {
         
         // 運行中の場合のみバス情報を更新
         if (applicableSchedule.isOperating) {
-            updateDirectionDisplay(universityDirection, 'university', hour, minute, applicableSchedule);
-            updateDirectionDisplay(stationDirection, 'station', hour, minute, applicableSchedule);
+            const hasUniv = updateDirectionDisplay(universityDirection, 'university', hour, minute, applicableSchedule);
+            const hasStation = updateDirectionDisplay(stationDirection, 'station', hour, minute, applicableSchedule);
+            updateEndOfServiceStatus(hasUniv, hasStation);
         }
     } catch (error) {
         displayError('表示の更新中にエラーが発生しました', error.message);
@@ -492,6 +625,22 @@ function updateOperationStatus(applicableSchedule) {
         clearAllBusDisplays();
     } else {
         operationStatusEl.textContent = '運行中';
+        operationStatusEl.classList.remove('danger');
+    }
+}
+
+// 本日の残り便の有無に応じて運行状況表示を更新（毎回の更新で呼び出される）
+function updateEndOfServiceStatus(hasUniv, hasStation) {
+    const operationStatusEl = document.getElementById('operationStatus');
+    if (!operationStatusEl) return;
+
+    if (!hasUniv && !hasStation) {
+        operationStatusEl.textContent = '本日の運行終了';
+        operationStatusEl.classList.add('warning');
+        operationStatusEl.classList.remove('danger');
+    } else {
+        operationStatusEl.textContent = '運行中';
+        operationStatusEl.classList.remove('warning');
         operationStatusEl.classList.remove('danger');
     }
 }
@@ -517,10 +666,18 @@ function setupTabBars() {
     try {
         // タブバーの開閉機能
         const tabBars = document.querySelectorAll('.tab-bar');
-        
+
+        const MOBILE_BREAKPOINT = 600;
+        let wasMobile = window.innerWidth <= MOBILE_BREAKPOINT;
+
+        // aria-expandedを開閉状態に同期
+        const syncAriaExpanded = (tab, content) => {
+            tab.setAttribute('aria-expanded', content ? String(!content.classList.contains('closed')) : 'false');
+        };
+
         // タブの初期状態を画面サイズに応じて設定
         const setInitialTabState = () => {
-            const isMobile = window.innerWidth <= 600;
+            const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
             tabBars.forEach(tab => {
                 const content = tab.nextElementSibling;
                 if (content) {
@@ -534,26 +691,52 @@ function setupTabBars() {
                         tab.classList.add('open');
                     }
                 }
+                syncAriaExpanded(tab, content);
             });
         };
-        
+
+        // キーボードアクセシビリティ用の属性を設定
+        tabBars.forEach(tab => {
+            tab.setAttribute('role', 'button');
+            tab.setAttribute('tabindex', '0');
+        });
+
         // 初期状態を設定
         setInitialTabState();
-        
+
+        // 開閉処理を共通化
+        const toggleTab = (tab) => {
+            const content = tab.nextElementSibling;
+            if (content) {
+                content.classList.toggle('closed');
+                tab.classList.toggle('open');
+            }
+            syncAriaExpanded(tab, content);
+        };
+
         // クリックイベントを設定
         tabBars.forEach(tab => {
             tab.addEventListener('click', () => {
-                const content = tab.nextElementSibling;
-                if (content) {
-                    content.classList.toggle('closed');
-                    tab.classList.toggle('open');
+                toggleTab(tab);
+            });
+
+            // キーボードアクセシビリティ（Enter/Space）
+            tab.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    toggleTab(tab);
                 }
             });
         });
-        
-        // リサイズ時にも状態を調整
+
+        // リサイズ時はブレークポイントをまたいだ場合のみ状態をリセット
+        // （モバイルブラウザのURLバー表示/非表示によるresizeで開いたタブが閉じるのを防ぐ）
         window.addEventListener('resize', () => {
-            setInitialTabState();
+            const isMobile = window.innerWidth <= MOBILE_BREAKPOINT;
+            if (isMobile !== wasMobile) {
+                wasMobile = isMobile;
+                setInitialTabState();
+            }
         });
     } catch (error) {
         console.error('タブバーの設定中にエラーが発生しました:', error);
@@ -609,14 +792,14 @@ function setupTimeModal() {
             
             if (useManualTime && manualDateTime) {
                 const manualDate = new Date(manualDateTime);
-                dateInput.value = manualDate.toISOString().split('T')[0];
+                dateInput.value = formatDateForInput(manualDate);
                 timeInput.value = manualDate.toTimeString().slice(0, 5);
                 currentTimeDisplay.textContent = `設定時刻: ${formatDate(manualDate)} ${formatTime(manualDate.getHours(), manualDate.getMinutes())}`;
                 currentTimeDisplay.style.backgroundColor = 'rgba(231, 126, 34, 0.1)';
                 currentTimeDisplay.style.borderColor = 'rgba(231, 126, 34, 0.2)';
                 currentTimeDisplay.style.color = '#e67e22';
             } else {
-                dateInput.value = now.toISOString().split('T')[0];
+                dateInput.value = formatDateForInput(now);
                 timeInput.value = now.toTimeString().slice(0, 5);
                 currentTimeDisplay.textContent = '現在時刻で表示中';
                 currentTimeDisplay.style.backgroundColor = 'rgba(52, 152, 219, 0.1)';
@@ -681,7 +864,7 @@ function setupTimeModal() {
             // 入力値の検証
             const validation = validateDateTime(dateValue, timeValue);
             if (!validation.valid) {
-                alert(validation.error);
+                showToast(validation.error, 'error');
                 return;
             }
             
@@ -734,7 +917,7 @@ function validateDateTime(dateStr, timeStr) {
     const minDate = new Date(now.getFullYear() - 1, 0, 1);   // 去年始めから
     
     if (dateTime > maxDate || dateTime < minDate) {
-        return { valid: false, error: '日付は1年前から1年後の範囲で入力してください' };
+        return { valid: false, error: '日付は昨年から来年末までの範囲で入力してください' };
     }
     
     return { valid: true, dateTime };
@@ -768,64 +951,9 @@ function rafDebounce(fn) {
 // 最適化されたDOM更新
 const optimizedUpdateDisplay = rafDebounce(updateDisplay);
 
-// メモリリークを防ぐためのクリーンアップ関数
-function cleanup() {
-    // イベントリスナーのクリーンアップ（必要に応じて実装）
-    console.log('アプリケーションがクリーンアップされました');
-}
-
-// ページを離れる際のクリーンアップ
-window.addEventListener('beforeunload', cleanup);
-
-// 要素の読み込み完了を確認してから初期化
-// QRCode.jsの読み込み確認（非ブロッキング）
-function waitForQRCode() {
-    return new Promise((resolve) => {
-        if (typeof QRCode !== 'undefined') {
-            resolve();
-            return;
-        }
-        
-        const checkInterval = setInterval(() => {
-            if (typeof QRCode !== 'undefined') {
-                clearInterval(checkInterval);
-                resolve();
-            }
-        }, 100);
-        
-        // 3秒でタイムアウト（短縮）
-        setTimeout(() => {
-            clearInterval(checkInterval);
-            resolve();
-        }, 3000);
-    });
-}
-
 // domReadyInit関数は削除（index.htmlから直接fastInitが呼ばれる）
 
-// Service Worker の登録
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then((registration) => {
-                console.log('Service Worker 登録成功:', registration.scope);
-                
-                // 更新があるかチェック
-                registration.addEventListener('updatefound', () => {
-                    const newWorker = registration.installing;
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            // 新しいバージョンが利用可能
-                            showToast('新しいバージョンが利用可能です。ページを再読み込みしてください。');
-                        }
-                    });
-                });
-            })
-            .catch((error) => {
-                console.log('Service Worker 登録失敗:', error);
-            });
-    });
-}
+// Service Workerの登録はsetupServiceWorker()に一本化（二重登録・更新フローの競合を防ぐ）
 
 // メニュー機能のセットアップ
 function setupMenuModal() {
@@ -1051,79 +1179,6 @@ async function generateQRCode(url) {
     }
 }
 
-// トースト通知表示
-function showToast(message) {
-    // 既存のトーストを削除
-    const existingToast = document.querySelector('.toast');
-    if (existingToast) {
-        existingToast.remove();
-    }
-    
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.textContent = message;
-    
-    // スタイルを動的に追加
-    toast.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: #2c3e50;
-        color: white;
-        padding: 12px 24px;
-        border-radius: 25px;
-        font-size: 14px;
-        font-weight: 500;
-        z-index: 10000;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        animation: toastSlideIn 0.3s ease-out;
-    `;
-    
-    // アニメーション用CSS
-    if (!document.querySelector('#toastStyles')) {
-        const style = document.createElement('style');
-        style.id = 'toastStyles';
-        style.textContent = `
-            @keyframes toastSlideIn {
-                from {
-                    transform: translateX(-50%) translateY(100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(-50%) translateY(0);
-                    opacity: 1;
-                }
-            }
-            @keyframes toastSlideOut {
-                from {
-                    transform: translateX(-50%) translateY(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateX(-50%) translateY(100%);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-    
-    document.body.appendChild(toast);
-    
-    // 3秒後に自動削除
-    setTimeout(() => {
-        if (toast.parentNode) {
-            toast.style.animation = 'toastSlideOut 0.3s ease-out';
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.remove();
-                }
-            }, 300);
-        }
-    }, 3000);
-}
-
 // テーマ管理関数
 const ThemeManager = {
     currentTheme: 'auto', // デフォルト値を設定
@@ -1216,9 +1271,10 @@ let deferredPrompt = null;
 function setupPWAInstall() {
     const installBanner = document.getElementById('installBanner');
     const installButton = document.getElementById('installButton');
-    
+    const dismissInstallBannerBtn = document.getElementById('dismissInstallBanner');
+
     // 既にインストール済みかチェック
-    if (window.matchMedia('(display-mode: standalone)').matches || 
+    if (window.matchMedia('(display-mode: standalone)').matches ||
         window.navigator.standalone === true ||
         localStorage.getItem('pwa-installed') === 'true') {
         console.log('既にPWAとしてインストール済みです');
@@ -1227,7 +1283,29 @@ function setupPWAInstall() {
         }
         return;
     }
-    
+
+    // 7日以内に閉じられていれば再表示しない
+    const dismissedAt = localStorage.getItem('installBannerDismissedAt');
+    if (dismissedAt) {
+        const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+        if (Date.now() - Number(dismissedAt) < SEVEN_DAYS_MS) {
+            if (installBanner) {
+                installBanner.classList.add('installed');
+            }
+            return;
+        }
+    }
+
+    // バナーを閉じるボタン
+    if (dismissInstallBannerBtn) {
+        dismissInstallBannerBtn.addEventListener('click', () => {
+            if (installBanner) {
+                installBanner.classList.add('installed');
+            }
+            localStorage.setItem('installBannerDismissedAt', String(Date.now()));
+        });
+    }
+
     // beforeinstallpromptイベントをキャプチャ
     window.addEventListener('beforeinstallprompt', (e) => {
         // デフォルトのインストールプロンプトを防ぐ
@@ -1318,58 +1396,66 @@ function showToast(message, type = 'info') {
 
 // Service Workerの登録と更新通知
 function setupServiceWorker() {
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js')
-            .then((registration) => {
-                console.log('Service Worker登録成功:', registration.scope);
-                
-                // 更新チェック
-                registration.addEventListener('updatefound', () => {
-                    const newWorker = registration.installing;
-                    console.log('新しいService Workerが見つかりました');
-                    
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            // 新しいバージョンが利用可能 - 自動更新
-                            console.log('新しいバージョンを自動適用します');
-                            newWorker.postMessage({ type: 'SKIP_WAITING' });
-                        }
-                    });
-                });
-                
-                // 定期的に更新チェック（1時間ごと）
-                setInterval(() => {
-                    registration.update();
-                }, 60 * 60 * 1000);
-            })
-            .catch((error) => {
-                console.error('Service Worker登録失敗:', error);
-            });
-        
-        // Service Workerからのメッセージを受信
-        navigator.serviceWorker.addEventListener('message', (event) => {
-            if (event.data && event.data.type === 'SW_UPDATED') {
-                console.log('Service Workerが更新されました:', event.data.version);
-                // 自動リロード
-                window.location.reload();
-            }
-        });
-        
-        // コントローラーの変更を監視（新しいSWがアクティブになった時）
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-            console.log('Service Workerが更新されました。ページをリロードします。');
-            window.location.reload();
-        });
-        
-        // オンライン/オフライン状態の監視
-        window.addEventListener('online', () => {
-            showToast('オンラインに戻りました', 'success');
-        });
-        
-        window.addEventListener('offline', () => {
-            showToast('オフラインモードです', 'warning');
-        });
+    // オンライン/オフライン状態の監視（SW非対応環境でも動作させる）
+    window.addEventListener('online', () => {
+        showToast('オンラインに戻りました', 'success');
+    });
+
+    window.addEventListener('offline', () => {
+        showToast('オフラインモードです', 'warning');
+    });
+
+    // 読み込み時点で既にオフラインの場合も通知
+    if (navigator.onLine === false) {
+        showToast('オフラインモードです', 'warning');
     }
+
+    if (!('serviceWorker' in navigator)) {
+        return;
+    }
+
+    // この時点でコントローラーが無い場合は初回訪問。
+    // 初回のclients.claim()によるcontrollerchangeでリロードしないためのフラグ
+    const hadController = !!navigator.serviceWorker.controller;
+    let refreshing = false;
+
+    navigator.serviceWorker.register('/sw.js')
+        .then((registration) => {
+            console.log('Service Worker登録成功:', registration.scope);
+
+            // 更新チェック
+            registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                console.log('新しいService Workerが見つかりました');
+
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        // 新しいバージョンが利用可能 - 自動更新
+                        console.log('新しいバージョンを自動適用します');
+                        newWorker.postMessage({ type: 'SKIP_WAITING' });
+                    }
+                });
+            });
+
+            // 定期的に更新チェック（1時間ごと）
+            setInterval(() => {
+                registration.update();
+            }, 60 * 60 * 1000);
+        })
+        .catch((error) => {
+            console.error('Service Worker登録失敗:', error);
+        });
+
+    // コントローラーの変更を監視（新しいSWがアクティブになった時）
+    // 初回インストール時はリロードせず、更新時も1回だけリロードする
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!hadController || refreshing) {
+            return;
+        }
+        refreshing = true;
+        console.log('Service Workerが更新されました。ページをリロードします。');
+        window.location.reload();
+    });
 }
 
 // 初期化時にテーマを適用
