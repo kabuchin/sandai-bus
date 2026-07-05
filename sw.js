@@ -1,10 +1,10 @@
 // ============================================
 // Service Worker - キャッシュ戦略とオフライン対応
-// Version: 1.1.1
+// Version: 1.1.2
 // ============================================
 
 // キャッシュバージョン管理
-const CACHE_VERSION = '1.1.1';
+const CACHE_VERSION = '1.1.2';
 const STATIC_CACHE = `sandai-bus-static-v${CACHE_VERSION}`;
 const DATA_CACHE = `sandai-bus-data-v${CACHE_VERSION}`;
 

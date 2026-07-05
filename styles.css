@@ -106,7 +106,7 @@ body {
 .status-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start; /* 上部揃えに変更 */
+    align-items: center; /* 縦方向は中央揃え */
     margin-bottom: 16px;
     padding: 12px;
     background: var(--header-gradient);
@@ -447,8 +447,8 @@ body {
         justify-content: space-between;
         gap: 8px;
         padding: 12px;
-        align-items: flex-start;
-    }    
+        align-items: center;
+    }
     .date-time-info {
         flex: 1;
         min-width: 0;
@@ -1020,7 +1020,7 @@ body {
         flex-direction: row;
         flex-wrap: wrap;
         gap: 8px;
-        align-items: flex-start;
+        align-items: center;
         padding: 12px;
     }
     
