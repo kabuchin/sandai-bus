@@ -5,7 +5,7 @@
   "main": "index.html",
   "scripts": {
     "start": "npx http-server -p 8080 -c-1",
-    "test": "echo \"No tests specified\" && exit 0"
+    "test": "node --test tests/*.test.mjs"
   },
   "keywords": [
     "産大バス",
@@ -27,3 +27,4 @@
     "url": "https://github.com/kabuchin/sandai-bus/issues"
   }
 }
+

@@ -41,7 +41,7 @@ const cacheAssets = (cacheName, assets) => {
 };
 
 /**
- * 古いキャッシュを削除
+ * このアプリが所有する古いキャッシュを削除
  * @param {Array} currentCaches - 保持するキャッシュ名のリスト
  * @returns {Promise}
  */
@@ -49,7 +49,9 @@ const clearOldCaches = (currentCaches) => {
   return caches.keys().then((cacheNames) => {
     return Promise.all(
       cacheNames.map((cacheName) => {
-        if (!currentCaches.includes(cacheName)) {
+        const owned = cacheName.startsWith('sandai-bus-static-v') ||
+          cacheName.startsWith('sandai-bus-data-v');
+        if (owned && !currentCaches.includes(cacheName)) {
           console.log('Service Worker: 古いキャッシュを削除:', cacheName);
           return caches.delete(cacheName);
         }
@@ -332,3 +334,4 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
 });
+
