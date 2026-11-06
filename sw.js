@@ -107,31 +107,30 @@ self.addEventListener('activate', (event) => {
  * キャッシュから即座にレスポンスし、バックグラウンドで更新
  * @param {Request} request
  * @param {string} cacheName - 使用するキャッシュ名（DATA_CACHE または STATIC_CACHE）
+ * @param {FetchEvent} event - バックグラウンド更新の完了まで生存させるイベント
  * @returns {Promise<Response>}
  */
-const staleWhileRevalidate = async (request, cacheName) => {
-  const cache = await caches.open(cacheName);
-  const cachedResponse = await cache.match(request);
-  
-  // バックグラウンドでキャッシュを更新
-  const fetchPromise = fetch(request)
-    .then((response) => {
-      if (response.ok) {
-        cache.put(request, response.clone());
-      }
-      return response;
-    })
-    .catch((error) => {
-      // キャッシュがあればそれを返す。無ければundefinedではなくエラーを伝播させる
-      // （respondWith(undefined)によるTypeErrorを防ぐ）
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      throw error;
-    });
+const staleWhileRevalidate = (request, cacheName, event) => {
+  const cachePromise = caches.open(cacheName);
+  const cachedResponsePromise = cachePromise.then((cache) => cache.match(request));
+  const fetchPromise = cachedResponsePromise.then(() => fetch(request));
+
+  // waitUntilはイベント処理中に登録し、取得とキャッシュ保存の両方を待つ。
+  // 保存の失敗は、有効なネットワークレスポンスを失敗させない。
+  event.waitUntil(
+    Promise.all([cachePromise, fetchPromise])
+      .then(([cache, response]) => {
+        if (response.ok) {
+          return cache.put(request, response.clone());
+        }
+      })
+      .catch((error) => {
+        console.error('Service Worker: バックグラウンド更新エラー', error);
+      })
+  );
 
   // キャッシュがあれば即座に返し、なければフェッチを待つ
-  return cachedResponse || fetchPromise;
+  return cachedResponsePromise.then((cachedResponse) => cachedResponse || fetchPromise);
 };
 
 // ============================================
@@ -277,11 +276,11 @@ self.addEventListener('fetch', (event) => {
   }
   // JSONファイル: Stale-While-Revalidate戦略（DATA_CACHE）
   else if (url.pathname.endsWith('.json')) {
-    event.respondWith(staleWhileRevalidate(request, DATA_CACHE));
+    event.respondWith(staleWhileRevalidate(request, DATA_CACHE, event));
   }
   // CSS/JSファイル: Stale-While-Revalidate戦略（STATIC_CACHE）
   else if (url.pathname.endsWith('.css') || url.pathname.endsWith('.js')) {
-    event.respondWith(staleWhileRevalidate(request, STATIC_CACHE));
+    event.respondWith(staleWhileRevalidate(request, STATIC_CACHE, event));
   }
   // その他の静的ファイル: Cache-First戦略
   else if (isStaticAsset(url.pathname)) {
@@ -332,3 +331,4 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
 });
+
